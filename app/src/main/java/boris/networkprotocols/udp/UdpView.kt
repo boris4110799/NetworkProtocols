@@ -19,17 +19,17 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,15 +39,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import boris.networkprotocols.R
 import boris.networkprotocols.ui.values.Orange
+import java.net.Inet4Address
 
 @Composable
-@Preview(showBackground = true)
-fun UdpView() {
+fun UdpView(udpViewModel : UdpViewModel) {
 	var localPort by rememberSaveable { mutableStateOf("8888") }
 	var isLocalPortError by remember { mutableStateOf(false) }
 	var isListening by rememberSaveable { mutableStateOf(false) }
@@ -56,6 +55,7 @@ fun UdpView() {
 	var remotePort by rememberSaveable { mutableStateOf("8888") }
 	var isRemotePortError by remember { mutableStateOf(false) }
 	var inputText by rememberSaveable { mutableStateOf("Hello") }
+	val list : List<Pair<String, String>> by udpViewModel.msgStateFlow.collectAsState()
 	
 	Surface {
 		Column {
@@ -76,6 +76,9 @@ fun UdpView() {
 					Spacer(modifier = Modifier.size(5.dp))
 					Switch(checked = isListening, onCheckedChange = {
 						try {
+							val port = localPort.toInt()
+							udpViewModel.setPort(port)
+							udpViewModel.changeServerStatus(it)
 							isListening = it
 							isLocalPortError = false
 						}
@@ -114,7 +117,7 @@ fun UdpView() {
 				Text(text = "訊息欄", modifier = Modifier.requiredWidthIn(180.dp, 200.dp), fontSize = 24.sp)
 				Row(modifier = Modifier.requiredWidthIn(180.dp, 200.dp).fillMaxHeight(),
 					horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-					IconButton(onClick = { /*TODO*/ }, modifier = Modifier.aspectRatio(1f)) {
+					IconButton(onClick = { udpViewModel.deleteList() }, modifier = Modifier.aspectRatio(1f)) {
 						Icon(imageVector = ImageVector.vectorResource(id = R.drawable.baseline_clear_all_24),
 							contentDescription = null, modifier = Modifier.fillMaxHeight().aspectRatio(1f),
 							tint = Orange)
@@ -128,7 +131,14 @@ fun UdpView() {
 					LazyColumn(state = rememberLazyListState(), contentPadding = PaddingValues(top = 4.dp),
 						modifier = Modifier.height(listHeight)) {
 						item {
-						
+							list.forEach {
+								Row {
+									Text(text = it.first, modifier = Modifier.weight(0.4f, true),
+										style = MaterialTheme.typography.titleLarge)
+									Text(text = it.second, modifier = Modifier.weight(0.6f, true),
+										style = MaterialTheme.typography.titleLarge)
+								}
+							}
 						}
 					}
 					Row(modifier = Modifier.fillMaxWidth().height(inputHeight),
@@ -140,8 +150,12 @@ fun UdpView() {
 							textStyle = TextStyle(fontSize = 20.sp), maxLines = 1)
 						IconButton(onClick = {
 							try {
+								val inet4Address = Inet4Address.getByName(remoteIP)
 								isRemoteIPError = false
 								isRemotePortError = try {
+									val port = remotePort.toInt()
+									udpViewModel.addText("發送", inputText)
+									udpViewModel.send(inputText, inet4Address, port)
 									false
 								}
 								catch (e : Exception) {
