@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -64,17 +67,19 @@ class MainActivity : ComponentActivity() {
 				ModalDrawerSheet(modifier = Modifier.fillMaxWidth(0.6f)) {
 					NavigationDrawerItem(label = { Text("UDP") }, selected = selectItem.value == "UDP", onClick = {
 						scope.launch { drawerState.close() }
+						navController.navigate(NavigationScreen.UDP.name)
 						selectItem.value = "UDP"
 					})
 					NavigationDrawerItem(label = { Text("TCP") }, selected = selectItem.value == "TCP", onClick = {
 						scope.launch { drawerState.close() }
+						navController.navigate(NavigationScreen.TCP.name)
 						selectItem.value = "TCP"
 					})
 				}
 			}) {
 				Scaffold(modifier = Modifier.focusRequester(focusRequester).focusable(true), topBar = {
 					TopAppBar(title = {
-						Text(text = "AppBar", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Justify,
+						Text(text = selectItem.value, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Justify,
 							color = Color.White)
 					}, navigationIcon = {
 						IconButton(onClick = { scope.launch { drawerState.open() } }) {
@@ -85,12 +90,17 @@ class MainActivity : ComponentActivity() {
 				}) { innerPadding ->
 					Surface(modifier = Modifier.padding(innerPadding), shape = MaterialTheme.shapes.small,
 						color = MaterialTheme.colorScheme.background) {
-						NavHost(navController = navController, startDestination = NavigationScreen.UDP.name) {
-							composable(NavigationScreen.UDP.name) {
-								UdpView()
-							}
-							composable(NavigationScreen.TCP.name) {
-								TcpView()
+						Column {
+							Text(text = "192.168.1.1", modifier = Modifier.fillMaxWidth(), fontSize = 20.sp,
+								textAlign = TextAlign.Center)
+							
+							NavHost(navController = navController, startDestination = NavigationScreen.UDP.name) {
+								composable(NavigationScreen.UDP.name) {
+									UdpView()
+								}
+								composable(NavigationScreen.TCP.name) {
+									TcpView()
+								}
 							}
 						}
 					}
