@@ -1,5 +1,6 @@
 package boris.networkprotocols.udp
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -11,9 +12,10 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -44,127 +46,255 @@ import boris.networkprotocols.ui.values.Orange
 import java.net.Inet4Address
 
 @Composable
-fun UdpView(udpViewModel : UdpViewModel) {
+fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	val state by udpViewModel.uiState.collectAsStateWithLifecycle()
 	val list : List<Pair<String, String>> by udpViewModel.msgStateFlow.collectAsState()
 	
+	fun updateLocalPort(value : String) {
+		udpViewModel.updateUIState(localPort = value)
+	}
+	
+	fun updateSwitch(value : Boolean) {
+		try {
+			val port = state.localPort.toInt()
+			udpViewModel.setPort(port)
+			udpViewModel.changeServerStatus(value)
+			udpViewModel.updateUIState(isLocalPortError = false, isListening = value)
+		}
+		catch (e : Exception) {
+			udpViewModel.updateUIState(isLocalPortError = true, isListening = false)
+		}
+	}
+	
+	fun updateRemoteIP(value : String) {
+		udpViewModel.updateUIState(remoteIP = value)
+	}
+	
+	fun updateRemotePort(value : String) {
+		udpViewModel.updateUIState(remotePort = value)
+	}
+	
+	fun updateInputText(value : String) {
+		udpViewModel.updateUIState(inputText = value)
+	}
+	
+	fun deleteList() {
+		udpViewModel.deleteList()
+	}
+	
+	fun updateError() {
+		try {
+			val inet4Address = Inet4Address.getByName(state.remoteIP)
+			udpViewModel.updateUIState(isRemoteIPError = false, isRemotePortError = try {
+				val port = state.remotePort.toInt()
+				udpViewModel.addMsg("發送", state.inputText)
+				udpViewModel.send(state.inputText, inet4Address, port)
+				false
+			}
+			catch (e : Exception) {
+				true
+			})
+		}
+		catch (e : Exception) {
+			udpViewModel.updateUIState(isRemoteIPError = true)
+		}
+	}
+	
 	Surface {
 		Column {
-			Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-				horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-				OutlinedTextField(value = state.localPort,
-					onValueChange = { udpViewModel.updateUIState(localPort = it) }, label = { Text(text = "本機Port") },
-					modifier = Modifier.requiredWidthIn(180.dp, 200.dp), maxLines = 1,
-					keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-					isError = state.isLocalPortError,
-					supportingText = { if (state.isLocalPortError) Text(text = "Wrong") },
-					colors = OutlinedTextFieldDefaults.colors(
-						errorBorderColor = Color.Red,
-						errorLabelColor = Color.Red,
-						errorSupportingTextColor = Color.Red,
-					))
-				Row(modifier = Modifier.requiredWidthIn(180.dp, 200.dp).fillMaxHeight(),
-					horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-					Text(text = "監聽")
-					Spacer(modifier = Modifier.size(5.dp))
-					Switch(checked = state.isListening, onCheckedChange = {
-						try {
-							val port = state.localPort.toInt()
-							udpViewModel.setPort(port)
-							udpViewModel.changeServerStatus(it)
-							udpViewModel.updateUIState(isLocalPortError = false, isListening = it)
-						}
-						catch (e : Exception) {
-							udpViewModel.updateUIState(isLocalPortError = true, isListening = false)
-						}
-					})
-				}
-			}
-			Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-				horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-				OutlinedTextField(value = state.remoteIP, onValueChange = { udpViewModel.updateUIState(remoteIP = it) },
-					label = { Text(text = "遠端IP") },
-					modifier = Modifier.requiredWidthIn(180.dp, 200.dp).fillMaxHeight(), maxLines = 1,
-					keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-					isError = state.isRemoteIPError,
-					supportingText = { if (state.isRemoteIPError) Text(text = "Wrong") },
-					colors = OutlinedTextFieldDefaults.colors(
-						errorBorderColor = Color.Red,
-						errorLabelColor = Color.Red,
-						errorSupportingTextColor = Color.Red,
-					))
-				OutlinedTextField(value = state.remotePort,
-					onValueChange = { udpViewModel.updateUIState(remotePort = it) },
-					label = { Text(text = "遠端Port") },
-					modifier = Modifier.requiredWidthIn(180.dp, 200.dp).fillMaxHeight(), maxLines = 1,
-					keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-					isError = state.isRemotePortError,
-					supportingText = { if (state.isRemotePortError) Text(text = "Wrong") },
-					colors = OutlinedTextFieldDefaults.colors(
-						errorBorderColor = Color.Red,
-						errorLabelColor = Color.Red,
-						errorSupportingTextColor = Color.Red,
-					))
-			}
-			Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-				horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-				Text(text = "訊息欄", modifier = Modifier.requiredWidthIn(180.dp, 200.dp), fontSize = 24.sp)
-				Row(modifier = Modifier.requiredWidthIn(180.dp, 200.dp).fillMaxHeight(),
-					horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-					IconButton(onClick = { udpViewModel.deleteList() }, modifier = Modifier.aspectRatio(1f)) {
-						Icon(imageVector = ImageVector.vectorResource(id = R.drawable.baseline_clear_all_24),
-							contentDescription = null, modifier = Modifier.fillMaxHeight().aspectRatio(1f),
-							tint = Orange)
-					}
-				}
-			}
-			BoxWithConstraints(modifier = Modifier.padding(horizontal = 8.dp)) {
-				val inputHeight = 70.dp
-				val listHeight = maxHeight-inputHeight
-				Column {
-					LazyColumn(state = rememberLazyListState(), contentPadding = PaddingValues(top = 4.dp),
-						modifier = Modifier.height(listHeight)) {
-						items(list) {
-							Row {
-								Text(text = it.first, modifier = Modifier.weight(0.4f, true),
-									style = MaterialTheme.typography.titleLarge)
-								Text(text = it.second, modifier = Modifier.weight(0.6f, true),
-									style = MaterialTheme.typography.titleLarge)
-							}
+			when (orientation) {
+				Configuration.ORIENTATION_PORTRAIT  -> {
+					BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+						val spacerWidth = 8.dp
+						val contentWidth = maxWidth.minus(spacerWidth.times(3)).div(2)
+						Row(modifier = Modifier.height(IntrinsicSize.Min),
+							verticalAlignment = Alignment.CenterVertically) {
+							LocalPortView(state = state,
+								modifier = Modifier.width(contentWidth).offset(spacerWidth, 0.dp),
+								onValueChange = { updateLocalPort(it) })
+							SwitchView(state = state,
+								modifier = Modifier.width(contentWidth).offset(spacerWidth*2, 0.dp),
+								onCheckedChange = { updateSwitch(it) })
 						}
 					}
-					Row(modifier = Modifier.fillMaxWidth().height(inputHeight),
-						verticalAlignment = Alignment.CenterVertically,
-						horizontalArrangement = Arrangement.SpaceBetween) {
-						OutlinedTextField(value = state.inputText,
-							onValueChange = { udpViewModel.updateUIState(inputText = it) },
-							label = { Text(text = "請輸入內容") },
-							modifier = Modifier.requiredWidthIn(250.dp, 350.dp).fillMaxHeight(),
-							textStyle = TextStyle(fontSize = 20.sp), maxLines = 1)
-						IconButton(onClick = {
-							try {
-								val inet4Address = Inet4Address.getByName(state.remoteIP)
-								udpViewModel.updateUIState(isRemoteIPError = false, isRemotePortError = try {
-									val port = state.remotePort.toInt()
-									udpViewModel.addMsg("發送", state.inputText)
-									udpViewModel.send(state.inputText, inet4Address, port)
-									false
+					BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+						val spacerWidth = 8.dp
+						val contentWidth = maxWidth.minus(spacerWidth.times(3)).div(2)
+						Row(modifier = Modifier.height(IntrinsicSize.Min),
+							verticalAlignment = Alignment.CenterVertically) {
+							RemoteIPView(state = state,
+								modifier = Modifier.width(contentWidth).offset(spacerWidth, 0.dp),
+								onValueChange = { updateRemoteIP(it) })
+							RemotePortView(state = state,
+								modifier = Modifier.width(contentWidth).offset(spacerWidth*2, 0.dp),
+								onValueChange = { updateRemotePort(it) })
+						}
+					}
+					Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+						horizontalArrangement = Arrangement.SpaceBetween,
+						verticalAlignment = Alignment.CenterVertically) {
+						Text(text = "訊息欄", modifier = Modifier.padding(start = 8.dp), fontSize = 24.sp)
+						ClearIconView(modifier = Modifier.aspectRatio(1f).offset((-8).dp, 0.dp)) {
+							deleteList()
+						}
+					}
+					BoxWithConstraints(modifier = Modifier.padding(horizontal = 8.dp)) {
+						val inputHeight = 70.dp
+						val listHeight = maxHeight-inputHeight
+						Column {
+							LazyColumn(state = rememberLazyListState(), contentPadding = PaddingValues(top = 4.dp),
+								modifier = Modifier.height(listHeight)) {
+								items(list) {
+									Row {
+										Text(text = it.first, modifier = Modifier.weight(0.4f, true),
+											style = MaterialTheme.typography.titleLarge)
+										Text(text = it.second, modifier = Modifier.weight(0.6f, true),
+											style = MaterialTheme.typography.titleLarge)
+									}
 								}
-								catch (e : Exception) {
-									true
-								})
 							}
-							catch (e : Exception) {
-								udpViewModel.updateUIState(isRemoteIPError = true)
+							BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(inputHeight),
+								contentAlignment = Alignment.Center) {
+								val sendWidth = 60.dp
+								val spacerWidth = 8.dp
+								val inputWidth = maxWidth-sendWidth-spacerWidth
+								Row(modifier = Modifier.height(IntrinsicSize.Min),
+									verticalAlignment = Alignment.CenterVertically) {
+									InputView(state = state, modifier = Modifier.width(inputWidth),
+										onValueChange = { updateInputText(it) })
+									Spacer(modifier = Modifier.size(spacerWidth))
+									SendIconView(modifier = Modifier.size(sendWidth)) { updateError() }
+								}
 							}
-						}, modifier = Modifier.size(60.dp)) {
-							Icon(imageVector = ImageVector.vectorResource(id = R.drawable.baseline_send_24),
-								contentDescription = null, modifier = Modifier.fillMaxHeight().aspectRatio(1f),
-								tint = Orange)
+						}
+					}
+				}
+				
+				Configuration.ORIENTATION_LANDSCAPE -> {
+					BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+						val spacerWidth = 8.dp
+						val clearWidth = 50.dp
+						val contentWidth = maxWidth.minus(spacerWidth.times(6)).minus(clearWidth).div(4)
+						Row(modifier = Modifier.height(70.dp), verticalAlignment = Alignment.CenterVertically) {
+							LocalPortView(state = state,
+								modifier = Modifier.width(contentWidth).offset(spacerWidth, 0.dp),
+								onValueChange = { updateLocalPort(it) })
+							SwitchView(state = state,
+								modifier = Modifier.width(contentWidth).offset(spacerWidth*2, 0.dp),
+								onCheckedChange = { updateSwitch(it) })
+							RemoteIPView(state = state,
+								modifier = Modifier.width(contentWidth).offset(spacerWidth*3, 0.dp),
+								onValueChange = { updateRemoteIP(it) })
+							RemotePortView(state = state,
+								modifier = Modifier.width(contentWidth).offset(spacerWidth*4, 0.dp),
+								onValueChange = { updateRemotePort(it) })
+							ClearIconView(modifier = Modifier.size(clearWidth).offset(spacerWidth*5, 0.dp)) {
+								deleteList()
+							}
+						}
+					}
+					BoxWithConstraints(modifier = Modifier.padding(horizontal = 8.dp)) {
+						val inputHeight = 70.dp
+						val listHeight = maxHeight-inputHeight
+						Column {
+							LazyColumn(state = rememberLazyListState(), modifier = Modifier.height(listHeight)) {
+								items(list) {
+									Row {
+										Text(text = it.first, modifier = Modifier.weight(0.4f, true),
+											style = MaterialTheme.typography.titleLarge)
+										Text(text = it.second, modifier = Modifier.weight(0.6f, true),
+											style = MaterialTheme.typography.titleLarge)
+									}
+								}
+							}
+							BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(inputHeight),
+								contentAlignment = Alignment.Center) {
+								val sendWidth = 50.dp
+								val spacerWidth = 8.dp
+								val inputWidth = maxWidth-sendWidth-spacerWidth
+								Row(modifier = Modifier.height(IntrinsicSize.Min),
+									verticalAlignment = Alignment.CenterVertically) {
+									InputView(state = state, modifier = Modifier.width(inputWidth),
+										onValueChange = { updateInputText(it) })
+									Spacer(modifier = Modifier.size(spacerWidth))
+									SendIconView(modifier = Modifier.size(sendWidth)) { updateError() }
+								}
+							}
 						}
 					}
 				}
 			}
 		}
+	}
+}
+
+@Composable
+private fun LocalPortView(state : UdpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
+	OutlinedTextField(value = state.localPort, onValueChange = { onValueChange(it) },
+		label = { Text(text = "本機Port") }, modifier = modifier, maxLines = 1,
+		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state.isLocalPortError,
+		supportingText = { if (state.isLocalPortError) Text(text = "Wrong") },
+		colors = OutlinedTextFieldDefaults.colors(
+			errorBorderColor = Color.Red,
+			errorLabelColor = Color.Red,
+			errorSupportingTextColor = Color.Red,
+		))
+}
+
+@Composable
+private fun SwitchView(state : UdpState, modifier : Modifier, onCheckedChange : (value : Boolean) -> Unit) {
+	Row(modifier = modifier, horizontalArrangement = Arrangement.Center,
+		verticalAlignment = Alignment.CenterVertically) {
+		Text(text = "監聽")
+		Spacer(modifier = Modifier.size(5.dp))
+		Switch(checked = state.isListening, onCheckedChange = { onCheckedChange(it) })
+	}
+}
+
+@Composable
+private fun RemoteIPView(state : UdpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
+	OutlinedTextField(value = state.remoteIP, onValueChange = { onValueChange(it) }, label = { Text(text = "遠端IP") },
+		modifier = modifier, maxLines = 1, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+		isError = state.isRemoteIPError, supportingText = { if (state.isRemoteIPError) Text(text = "Wrong") },
+		colors = OutlinedTextFieldDefaults.colors(
+			errorBorderColor = Color.Red,
+			errorLabelColor = Color.Red,
+			errorSupportingTextColor = Color.Red,
+		))
+}
+
+@Composable
+private fun RemotePortView(state : UdpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
+	OutlinedTextField(value = state.remotePort, onValueChange = { onValueChange(it) },
+		label = { Text(text = "遠端Port") }, modifier = modifier, maxLines = 1,
+		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state.isRemotePortError,
+		supportingText = { if (state.isRemotePortError) Text(text = "Wrong") },
+		colors = OutlinedTextFieldDefaults.colors(
+			errorBorderColor = Color.Red,
+			errorLabelColor = Color.Red,
+			errorSupportingTextColor = Color.Red,
+		))
+}
+
+@Composable
+private fun InputView(state : UdpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
+	OutlinedTextField(value = state.inputText, onValueChange = { onValueChange(it) },
+		label = { Text(text = "請輸入內容") }, modifier = modifier, textStyle = TextStyle(fontSize = 20.sp),
+		maxLines = 1)
+}
+
+@Composable
+private fun ClearIconView(modifier : Modifier, onClick : () -> Unit) {
+	IconButton(onClick = onClick, modifier = modifier) {
+		Icon(imageVector = ImageVector.vectorResource(id = R.drawable.baseline_clear_all_24), contentDescription = null,
+			modifier = Modifier.fillMaxHeight().aspectRatio(1f), tint = Orange)
+	}
+}
+
+@Composable
+private fun SendIconView(modifier : Modifier, onClick : () -> Unit) {
+	IconButton(onClick = onClick, modifier = modifier) {
+		Icon(imageVector = ImageVector.vectorResource(id = R.drawable.baseline_send_24), contentDescription = null,
+			modifier = Modifier.fillMaxHeight().aspectRatio(1f), tint = Orange)
 	}
 }

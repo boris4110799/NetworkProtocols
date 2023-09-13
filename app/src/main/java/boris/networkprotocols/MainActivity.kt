@@ -1,5 +1,6 @@
 package boris.networkprotocols
 
+import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.Network
 import android.os.Bundle
@@ -27,16 +28,20 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -95,6 +100,9 @@ class MainActivity : ComponentActivity() {
 		var selectItem by remember { mutableStateOf("UDP") }
 		val localIP : String by localIPFlow.collectAsState(initial = "")
 		
+		var orientation by remember { mutableIntStateOf(Configuration.ORIENTATION_PORTRAIT) }
+		val configuration = LocalConfiguration.current
+		
 		navController.setLifecycleOwner(LocalLifecycleOwner.current)
 		navController.setOnBackPressedDispatcher(onBackPressedDispatcher.apply {
 			addCallback {
@@ -102,9 +110,18 @@ class MainActivity : ComponentActivity() {
 			}
 		})
 		
+		LaunchedEffect(configuration) {
+			// Save any changes to the orientation value on the configuration object
+			snapshotFlow { configuration.orientation }.collect { orientation = it }
+		}
+		
 		MainTheme {
 			ModalNavigationDrawer(drawerState = drawerState, drawerContent = {
-				ModalDrawerSheet(modifier = Modifier.fillMaxWidth(0.6f)) {
+				ModalDrawerSheet(modifier = Modifier.fillMaxWidth(when (orientation) {
+					Configuration.ORIENTATION_PORTRAIT  -> 0.4f
+					Configuration.ORIENTATION_LANDSCAPE -> 0.3f
+					else                                -> 0.4f
+				})) {
 					NavigationDrawerItem(label = { Text("UDP") }, selected = selectItem == "UDP", onClick = {
 						scope.launch { drawerState.close() }
 						navController.navigate(NavigationScreen.UDP.name) {
@@ -147,7 +164,7 @@ class MainActivity : ComponentActivity() {
 							textAlign = TextAlign.Center)
 						NavHost(navController = navController, startDestination = NavigationScreen.UDP.name) {
 							composable(NavigationScreen.UDP.name) {
-								UdpView(udpViewModel)
+								UdpView(udpViewModel, orientation)
 							}
 							composable(NavigationScreen.TCP.name) {
 								TcpView()

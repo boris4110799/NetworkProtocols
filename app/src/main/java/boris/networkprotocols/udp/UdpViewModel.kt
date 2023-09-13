@@ -28,7 +28,7 @@ data class UdpState(val localPort : String = "8888",
 class UdpViewModel : ViewModel() {
 	private val _uiState = MutableStateFlow(UdpState())
 	val uiState : StateFlow<UdpState> = _uiState.asStateFlow()
-	private val _msgStateFlow = MutableStateFlow(arrayListOf<Pair<String,String>>())
+	private val _msgStateFlow = MutableStateFlow(arrayListOf<Pair<String, String>>())
 	val msgStateFlow = _msgStateFlow.asStateFlow()
 	private val msgList = arrayListOf<Pair<String, String>>()
 	private var ds : DatagramSocket? = null
