@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -14,16 +16,42 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.SocketException
 
+data class UdpState(val localPort : String = "8888",
+					val isLocalPortError : Boolean = false,
+					val isListening : Boolean = false,
+					val remoteIP : String = "192.168.0.101",
+					val isRemoteIPError : Boolean = false,
+					val remotePort : String = "8888",
+					val isRemotePortError : Boolean = false,
+					val inputText : String = "Hello")
+
 class UdpViewModel : ViewModel() {
-	private val _msgStateFlow = MutableStateFlow(ArrayList<Pair<String, String>>())
+	private val _uiState = MutableStateFlow(UdpState())
+	val uiState : StateFlow<UdpState> = _uiState.asStateFlow()
+	private val _msgStateFlow = MutableStateFlow(arrayListOf<Pair<String,String>>())
 	val msgStateFlow = _msgStateFlow.asStateFlow()
-	private val msgList = ArrayList<Pair<String, String>>()
+	private val msgList = arrayListOf<Pair<String, String>>()
 	private var ds : DatagramSocket? = null
 	private var port = 8888
 	private var isServerOn = false
 	private val tag = "UDP"
 	
-	fun addText(title : String, msg : String) {
+	fun updateUIState(localPort : String = uiState.value.localPort,
+					  isLocalPortError : Boolean = uiState.value.isLocalPortError,
+					  isListening : Boolean = uiState.value.isListening,
+					  remoteIP : String = uiState.value.remoteIP,
+					  isRemoteIPError : Boolean = uiState.value.isRemoteIPError,
+					  remotePort : String = uiState.value.remotePort,
+					  isRemotePortError : Boolean = uiState.value.isRemotePortError,
+					  inputText : String = uiState.value.inputText) {
+		_uiState.update {
+			it.copy(localPort = localPort, isLocalPortError = isLocalPortError, isListening = isListening,
+				remoteIP = remoteIP, isRemoteIPError = isRemoteIPError, remotePort = remotePort,
+				isRemotePortError = isRemotePortError, inputText = inputText)
+		}
+	}
+	
+	fun addMsg(title : String, msg : String) {
 		msgList.add(Pair(title, msg))
 		_msgStateFlow.value = ArrayList(msgList)
 	}
@@ -55,7 +83,7 @@ class UdpViewModel : ViewModel() {
 						Log.d(tag, "收到資料： $string")
 						
 						withContext(Dispatchers.Main) {
-							addText(dpRcv.address.hostAddress!!.toString(), string)
+							addMsg(dpRcv.address.hostAddress!!.toString(), string)
 						}
 					}
 				}
