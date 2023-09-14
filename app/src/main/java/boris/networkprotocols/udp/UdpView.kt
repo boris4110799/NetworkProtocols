@@ -29,8 +29,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,7 +53,9 @@ import java.net.Inet4Address
 @Composable
 fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	val state by udpViewModel.uiState.collectAsStateWithLifecycle()
+	val listState = rememberLazyListState()
 	val list : List<Pair<String, String>> by udpViewModel.msgStateFlow.collectAsState()
+	var sizeState by rememberSaveable { mutableIntStateOf(0) }
 	
 	fun updateLocalPort(value : String) {
 		udpViewModel.updateUIState(localPort = value)
@@ -100,6 +107,13 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 		}
 	}
 	
+	LaunchedEffect(sizeState) {
+		snapshotFlow { list.size }.collect {
+			if (sizeState != list.size) listState.scrollToItem(sizeState, 0)
+			sizeState = it
+		}
+	}
+	
 	Surface {
 		Column {
 			when (orientation) {
@@ -142,7 +156,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 						val inputHeight = 70.dp
 						val listHeight = maxHeight-inputHeight
 						Column {
-							LazyColumn(state = rememberLazyListState(), contentPadding = PaddingValues(top = 4.dp),
+							LazyColumn(state = listState, contentPadding = PaddingValues(top = 4.dp),
 								modifier = Modifier.height(listHeight)) {
 								items(list) {
 									Row {
@@ -197,7 +211,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 						val inputHeight = 70.dp
 						val listHeight = maxHeight-inputHeight
 						Column {
-							LazyColumn(state = rememberLazyListState(), modifier = Modifier.height(listHeight)) {
+							LazyColumn(state = listState, modifier = Modifier.height(listHeight)) {
 								items(list) {
 									Row {
 										Text(text = it.first, modifier = Modifier.weight(0.4f, true),
