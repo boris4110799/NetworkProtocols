@@ -3,12 +3,17 @@ package boris.networkprotocols
 import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.Network
+import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
+import android.window.OnBackInvokedCallback
+import android.window.OnBackInvokedDispatcher
 import androidx.activity.ComponentActivity
-import androidx.activity.addCallback
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +33,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,6 +48,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -88,7 +95,14 @@ class MainActivity : ComponentActivity() {
 				}
 			}
 		})
+		
+		onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(false) {
+			override fun handleOnBackPressed() {
+				Log.d("test", "123")
+			}
+		})
 	}
+	
 	
 	@OptIn(ExperimentalMaterial3Api::class)
 	@Composable
@@ -98,17 +112,16 @@ class MainActivity : ComponentActivity() {
 		val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 		val focusRequester = remember { FocusRequester() }
 		var selectItem by remember { mutableStateOf("UDP") }
+		val handleBackHandler = remember(selectItem) { false }
 		val localIP : String by localIPFlow.collectAsState(initial = "")
 		
 		var orientation by remember { mutableIntStateOf(Configuration.ORIENTATION_PORTRAIT) }
 		val configuration = LocalConfiguration.current
 		
 		navController.setLifecycleOwner(LocalLifecycleOwner.current)
-		navController.setOnBackPressedDispatcher(onBackPressedDispatcher.apply {
-			addCallback {
-				Toast.makeText(applicationContext, "Back", Toast.LENGTH_SHORT).show()
-			}
-		})
+		
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) BackInvokeHandler(handleBackHandler)
+		else BackHandler(handleBackHandler) {}
 		
 		LaunchedEffect(configuration) {
 			// Save any changes to the orientation value on the configuration object
@@ -172,6 +185,38 @@ class MainActivity : ComponentActivity() {
 						}
 					}
 				}
+			}
+		}
+	}
+	
+	@Composable
+	@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+	fun BackInvokeHandler(handleBackHandler : Boolean,
+						  priority : Int = OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+						  callback : () -> Unit = {}) {
+		val backInvokedCallback = remember {
+			OnBackInvokedCallback {
+				callback()
+			}
+		}
+		
+		val activity = if (LocalLifecycleOwner.current is MainActivity) LocalLifecycleOwner.current as MainActivity
+		else if (LocalContext.current is MainActivity) LocalContext.current as MainActivity
+		else throw IllegalStateException("LocalLifecycleOwner is not MainActivity or Fragment")
+		
+		if (handleBackHandler) {
+			activity.onBackInvokedDispatcher.registerOnBackInvokedCallback(priority, backInvokedCallback)
+		}
+		
+		LaunchedEffect(handleBackHandler) {
+			if (!handleBackHandler) {
+				activity.onBackInvokedDispatcher.unregisterOnBackInvokedCallback(backInvokedCallback)
+			}
+		}
+		
+		DisposableEffect(activity.lifecycle, activity.onBackInvokedDispatcher) {
+			onDispose {
+				activity.onBackInvokedDispatcher.unregisterOnBackInvokedCallback(backInvokedCallback)
 			}
 		}
 	}
