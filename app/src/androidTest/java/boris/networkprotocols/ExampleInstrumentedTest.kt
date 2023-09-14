@@ -1,20 +1,16 @@
 package boris.networkprotocols
 
+import android.content.res.Configuration
 import androidx.compose.ui.test.junit4.StateRestorationTester
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import boris.networkprotocols.udp.UdpView
 import boris.networkprotocols.udp.UdpViewModel
-import boris.networkprotocols.ui.values.MainTheme
-
-import org.junit.Test
-import org.junit.runner.RunWith
-
 import org.junit.Assert.*
 import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -41,8 +37,9 @@ class MyStateRestorationTests {
 	fun onRecreation_stateIsRestored() {
 		val restorationTester = StateRestorationTester(composeTestRule)
 		val udpViewModel = UdpViewModel()
+		val orientation = Configuration.ORIENTATION_PORTRAIT
 		restorationTester.setContent {
-			UdpView(udpViewModel = udpViewModel)
+			UdpView(udpViewModel = udpViewModel, orientation = orientation)
 		}
 		
 		// TODO: Run actions that modify the state
