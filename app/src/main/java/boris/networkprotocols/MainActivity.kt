@@ -202,7 +202,7 @@ class MainActivity : ComponentActivity() {
 		
 		val activity = if (LocalLifecycleOwner.current is MainActivity) LocalLifecycleOwner.current as MainActivity
 		else if (LocalContext.current is MainActivity) LocalContext.current as MainActivity
-		else throw IllegalStateException("LocalLifecycleOwner is not MainActivity or Fragment")
+		else throw IllegalStateException("Fail to fetch MainActivity")
 		
 		if (handleBackHandler) {
 			activity.onBackInvokedDispatcher.registerOnBackInvokedCallback(priority, backInvokedCallback)
