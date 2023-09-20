@@ -50,11 +50,26 @@ import boris.networkprotocols.R
 import boris.networkprotocols.ui.values.Orange
 import java.net.Inet4Address
 
+/**
+ * Udp screen
+ */
 @Composable
 fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
+	/**
+	 * Store the UI state
+	 */
 	val state by udpViewModel.uiState.collectAsStateWithLifecycle()
+	
 	val listState = rememberLazyListState()
+	
+	/**
+	 * The message list
+	 */
 	val list : List<Pair<String, String>> by udpViewModel.msgStateFlow.collectAsState()
+	
+	/**
+	 * Store the state of the list size
+	 */
 	var sizeState by rememberSaveable { mutableIntStateOf(0) }
 	
 	fun updateLocalPort(value : String) {
@@ -107,6 +122,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 		}
 	}
 	
+	//Scroll to bottommost of list when everytime list size has been changed
 	LaunchedEffect(sizeState) {
 		snapshotFlow { list.size }.collect {
 			if (sizeState != list.size) listState.scrollToItem(sizeState, 0)

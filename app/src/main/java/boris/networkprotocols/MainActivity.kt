@@ -68,6 +68,8 @@ import java.net.Inet4Address
 
 class MainActivity : ComponentActivity() {
 	private val udpViewModel : UdpViewModel by viewModels()
+	
+	//StateFlow to collect the info of local IP
 	private var _localIPFlow = MutableStateFlow("")
 	private var localIPFlow = _localIPFlow.asStateFlow()
 	
@@ -77,6 +79,7 @@ class MainActivity : ComponentActivity() {
 			MainView()
 		}
 		
+		//Set up ConnectivityManager and callback
 		val connectivityManager = getSystemService(ConnectivityManager::class.java)
 		connectivityManager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
 			override fun onAvailable(network : Network) {
@@ -96,14 +99,17 @@ class MainActivity : ComponentActivity() {
 			}
 		})
 		
+		//Set up back press gesture
 		onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(false) {
 			override fun handleOnBackPressed() {
-				Log.d("test", "123")
+				Log.d("OnBackPressedCallback", "handleOnBackPressed")
 			}
 		})
 	}
 	
-	
+	/**
+	 * Main view of activity
+	 */
 	@OptIn(ExperimentalMaterial3Api::class)
 	@Composable
 	fun MainView() {
@@ -111,10 +117,13 @@ class MainActivity : ComponentActivity() {
 		val scope = rememberCoroutineScope()
 		val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 		val focusRequester = remember { FocusRequester() }
+		
+		//Current screen which be selected
 		var selectItem by remember { mutableStateOf("UDP") }
 		val handleBackHandler = remember(selectItem) { false }
 		val localIP : String by localIPFlow.collectAsState(initial = "")
 		
+		//Store the orientation state
 		var orientation by remember { mutableIntStateOf(Configuration.ORIENTATION_PORTRAIT) }
 		val configuration = LocalConfiguration.current
 		
@@ -124,7 +133,7 @@ class MainActivity : ComponentActivity() {
 		else BackHandler(handleBackHandler) {}
 		
 		LaunchedEffect(configuration) {
-			// Save any changes to the orientation value on the configuration object
+			// Save any changes of the orientation value on the configuration object
 			snapshotFlow { configuration.orientation }.collect { orientation = it }
 		}
 		
@@ -189,6 +198,9 @@ class MainActivity : ComponentActivity() {
 		}
 	}
 	
+	/**
+	 * Set up back gesture handler
+	 */
 	@Composable
 	@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 	fun BackInvokeHandler(handleBackHandler : Boolean,
@@ -200,6 +212,7 @@ class MainActivity : ComponentActivity() {
 			}
 		}
 		
+		//Fetch MainActivity instance
 		val activity = if (LocalLifecycleOwner.current is MainActivity) LocalLifecycleOwner.current as MainActivity
 		else if (LocalContext.current is MainActivity) LocalContext.current as MainActivity
 		else throw IllegalStateException("Fail to fetch MainActivity")

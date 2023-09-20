@@ -36,6 +36,9 @@ class UdpViewModel : ViewModel() {
 	private var isServerOn = false
 	private val tag = "UDP"
 	
+	/**
+	 * A function to update UI state
+	 */
 	fun updateUIState(localPort : String = uiState.value.localPort,
 					  isLocalPortError : Boolean = uiState.value.isLocalPortError,
 					  isListening : Boolean = uiState.value.isListening,
@@ -51,18 +54,28 @@ class UdpViewModel : ViewModel() {
 		}
 	}
 	
+	/**
+	 * Add a new message to list
+	 */
 	fun addMsg(title : String, msg : String) {
 		msgList.add(Pair(title, msg))
 		_msgStateFlow.value = ArrayList(msgList)
 	}
 	
+	/**
+	 * Delete all message in list
+	 */
 	fun deleteList() {
 		msgList.clear()
 		_msgStateFlow.value = ArrayList(msgList)
 	}
 	
+	/**
+	 * Start a coroutine for running udp logic
+	 */
 	private fun startThread() {
 		viewModelScope.launch(Dispatchers.IO) {
+			//Create a socket
 			try {
 				ds = DatagramSocket(port).apply { soTimeout = 5000 }
 				Log.d(tag, "Server已啟動")
@@ -72,6 +85,7 @@ class UdpViewModel : ViewModel() {
 				e.printStackTrace()
 			}
 			
+			//Continuously collect the incoming message
 			val msgRcv = ByteArray(1024)
 			val dpRcv = DatagramPacket(msgRcv, msgRcv.size)
 			while (isServerOn) {
@@ -94,7 +108,9 @@ class UdpViewModel : ViewModel() {
 		}
 	}
 	
-	//切換伺服器監聽狀態
+	/**
+	 * Change the server status
+	 */
 	fun changeServerStatus(isOn : Boolean) {
 		isServerOn = isOn
 		if (isOn && ds == null) {
@@ -107,11 +123,16 @@ class UdpViewModel : ViewModel() {
 		}
 	}
 	
-	//切換Port
+	/**
+	 * Set up new port number
+	 */
 	fun setPort(port : Int) {
 		this.port = port
 	}
 	
+	/**
+	 * Create a socket and send a message
+	 */
 	fun send(msg : String, remoteIP : InetAddress, remotePort : Int) {
 		viewModelScope.launch(Dispatchers.IO) {
 			Log.d(tag, "客户端IP：$remoteIP:$remotePort")
