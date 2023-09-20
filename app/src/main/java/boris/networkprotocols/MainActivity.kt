@@ -59,7 +59,7 @@ import androidx.navigation.compose.rememberNavController
 import boris.networkprotocols.tcp.TcpView
 import boris.networkprotocols.udp.UdpView
 import boris.networkprotocols.udp.UdpViewModel
-import boris.networkprotocols.ui.navigation.NavigationScreen
+import boris.networkprotocols.ui.navigation.Screen
 import boris.networkprotocols.ui.values.MainTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -119,7 +119,7 @@ class MainActivity : ComponentActivity() {
 		val focusRequester = remember { FocusRequester() }
 		
 		//Current screen which be selected
-		var selectItem by remember { mutableStateOf("UDP") }
+		var selectItem by remember { mutableStateOf(Screen.UDP.name) }
 		val handleBackHandler = remember(selectItem) { false }
 		val localIP : String by localIPFlow.collectAsState(initial = "")
 		
@@ -144,30 +144,32 @@ class MainActivity : ComponentActivity() {
 					Configuration.ORIENTATION_LANDSCAPE -> 0.3f
 					else                                -> 0.4f
 				})) {
-					NavigationDrawerItem(label = { Text("UDP") }, selected = selectItem == "UDP", onClick = {
-						scope.launch { drawerState.close() }
-						navController.navigate(NavigationScreen.UDP.name) {
-							launchSingleTop = true
-							popUpTo(navController.currentBackStack.value[1].destination.id) {
-								inclusive = true
-								saveState = true
+					NavigationDrawerItem(label = { Text(Screen.UDP.name) }, selected = selectItem == Screen.UDP.name,
+						onClick = {
+							scope.launch { drawerState.close() }
+							navController.navigate(Screen.UDP.name) {
+								launchSingleTop = true
+								popUpTo(navController.currentBackStack.value[1].destination.id) {
+									inclusive = true
+									saveState = true
+								}
+								restoreState = true
 							}
-							restoreState = true
-						}
-						selectItem = "UDP"
-					})
-					NavigationDrawerItem(label = { Text("TCP") }, selected = selectItem == "TCP", onClick = {
-						scope.launch { drawerState.close() }
-						navController.navigate(NavigationScreen.TCP.name) {
-							launchSingleTop = true
-							popUpTo(navController.currentBackStack.value[1].destination.id) {
-								inclusive = true
-								saveState = true
+							selectItem = "UDP"
+						})
+					NavigationDrawerItem(label = { Text(Screen.TCP.name) }, selected = selectItem == Screen.TCP.name,
+						onClick = {
+							scope.launch { drawerState.close() }
+							navController.navigate(Screen.TCP.name) {
+								launchSingleTop = true
+								popUpTo(navController.currentBackStack.value[1].destination.id) {
+									inclusive = true
+									saveState = true
+								}
+								restoreState = true
 							}
-							restoreState = true
-						}
-						selectItem = "TCP"
-					})
+							selectItem = "TCP"
+						})
 				}
 			}) {
 				Scaffold(modifier = Modifier.focusRequester(focusRequester).focusable(true), topBar = {
@@ -184,11 +186,11 @@ class MainActivity : ComponentActivity() {
 					Column(modifier = Modifier.padding(innerPadding)) {
 						Text(text = "本機IP: $localIP", modifier = Modifier.fillMaxWidth(), fontSize = 20.sp,
 							textAlign = TextAlign.Center)
-						NavHost(navController = navController, startDestination = NavigationScreen.UDP.name) {
-							composable(NavigationScreen.UDP.name) {
+						NavHost(navController = navController, startDestination = Screen.UDP.name) {
+							composable(Screen.UDP.name) {
 								UdpView(udpViewModel, orientation)
 							}
-							composable(NavigationScreen.TCP.name) {
+							composable(Screen.TCP.name) {
 								TcpView()
 							}
 						}
