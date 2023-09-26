@@ -62,7 +62,13 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 	 */
 	val state by tcpViewModel.uiState.collectAsStateWithLifecycle()
 	
-	var enabled by remember { mutableStateOf(true) }
+	/**
+	 * Control textView's enabled property
+	 */
+	val enabled by remember(state.isListening, state.isConnecting) {
+		mutableStateOf(!state.isListening && !state.isConnecting)
+	}
+	
 	val listState = rememberLazyListState()
 	
 	/**
@@ -136,10 +142,6 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 		}
 	}
 	
-	LaunchedEffect(state.isListening, state.isConnecting) {
-		enabled = !state.isListening && !state.isConnecting
-	}
-	
 	Surface {
 		Column {
 			when (orientation) {
@@ -150,10 +152,10 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 						Row(modifier = Modifier.height(IntrinsicSize.Min),
 							verticalAlignment = Alignment.CenterVertically) {
 							LocalPortView(state = state, enabled = enabled,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth),
 								onValueChange = { updateLocalPort(it) })
 							ListeningView(state = state, enabled = !state.isConnecting,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*2, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
 								onCheckedChange = { updateListening(it) })
 						}
 					}
@@ -163,10 +165,10 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 						Row(modifier = Modifier.height(IntrinsicSize.Min),
 							verticalAlignment = Alignment.CenterVertically) {
 							RemoteIPView(state = state, enabled = enabled,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth),
 								onValueChange = { updateRemoteIP(it) })
 							RemotePortView(state = state, enabled = enabled,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*2, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
 								onValueChange = { updateRemotePort(it) })
 						}
 					}
@@ -176,7 +178,7 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 						Text(text = "訊息欄", modifier = Modifier.padding(start = 8.dp), fontSize = 24.sp)
 						ConnectingView(state = state, enabled = !state.isListening,
 							modifier = Modifier.height(IntrinsicSize.Min), onCheckedChange = { updateConnecting(it) })
-						ClearIconView(modifier = Modifier.aspectRatio(1f).offset((-8).dp, 0.dp)) {
+						ClearIconView(modifier = Modifier.aspectRatio(1f).offset((-8).dp)) {
 							deleteList()
 						}
 					}
@@ -216,21 +218,24 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 					BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
 						val spaceWidth = 8.dp
 						val clearWidth = 50.dp
-						val contentWidth = maxWidth.minus(spaceWidth.times(6)).minus(clearWidth).div(4)
+						val contentWidth = maxWidth.minus(spaceWidth.times(7)).minus(clearWidth).div(5)
 						Row(modifier = Modifier.height(70.dp), verticalAlignment = Alignment.CenterVertically) {
 							LocalPortView(state = state, enabled = enabled,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth),
 								onValueChange = { updateLocalPort(it) })
 							ListeningView(state = state, enabled = !state.isConnecting,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*2, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
 								onCheckedChange = { updateListening(it) })
 							RemoteIPView(state = state, enabled = enabled,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*3, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*3),
 								onValueChange = { updateRemoteIP(it) })
 							RemotePortView(state = state, enabled = enabled,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*4, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*4),
 								onValueChange = { updateRemotePort(it) })
-							ClearIconView(modifier = Modifier.size(clearWidth).offset(spaceWidth*5, 0.dp)) {
+							ConnectingView(state = state, enabled = !state.isListening,
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*5),
+								onCheckedChange = { updateConnecting(it) })
+							ClearIconView(modifier = Modifier.size(clearWidth).offset(spaceWidth*6)) {
 								deleteList()
 							}
 						}

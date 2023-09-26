@@ -33,6 +33,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -59,6 +61,11 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	 * Store the UI state
 	 */
 	val state by udpViewModel.uiState.collectAsStateWithLifecycle()
+	
+	/**
+	 * Control textView's enabled property
+	 */
+	val enabled by remember(state.isListening) { mutableStateOf(!state.isListening) }
 	
 	val listState = rememberLazyListState()
 	
@@ -139,11 +146,9 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 						val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
 						Row(modifier = Modifier.height(IntrinsicSize.Min),
 							verticalAlignment = Alignment.CenterVertically) {
-							LocalPortView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth, 0.dp),
+							LocalPortView(state = state, enabled = enabled, modifier = Modifier.width(contentWidth).offset(spaceWidth),
 								onValueChange = { updateLocalPort(it) })
-							SwitchView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*2, 0.dp),
+							SwitchView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
 								onCheckedChange = { updateSwitch(it) })
 						}
 					}
@@ -152,11 +157,9 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 						val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
 						Row(modifier = Modifier.height(IntrinsicSize.Min),
 							verticalAlignment = Alignment.CenterVertically) {
-							RemoteIPView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth, 0.dp),
+							RemoteIPView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth),
 								onValueChange = { updateRemoteIP(it) })
-							RemotePortView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*2, 0.dp),
+							RemotePortView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
 								onValueChange = { updateRemotePort(it) })
 						}
 					}
@@ -164,7 +167,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 						horizontalArrangement = Arrangement.SpaceBetween,
 						verticalAlignment = Alignment.CenterVertically) {
 						Text(text = "訊息欄", modifier = Modifier.padding(start = 8.dp), fontSize = 24.sp)
-						ClearIconView(modifier = Modifier.aspectRatio(1f).offset((-8).dp, 0.dp)) {
+						ClearIconView(modifier = Modifier.aspectRatio(1f).offset((-8).dp)) {
 							deleteList()
 						}
 					}
@@ -206,19 +209,15 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 						val clearWidth = 50.dp
 						val contentWidth = maxWidth.minus(spaceWidth.times(6)).minus(clearWidth).div(4)
 						Row(modifier = Modifier.height(70.dp), verticalAlignment = Alignment.CenterVertically) {
-							LocalPortView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth, 0.dp),
+							LocalPortView(state = state, enabled = enabled, modifier = Modifier.width(contentWidth).offset(spaceWidth),
 								onValueChange = { updateLocalPort(it) })
-							SwitchView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*2, 0.dp),
+							SwitchView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
 								onCheckedChange = { updateSwitch(it) })
-							RemoteIPView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*3, 0.dp),
+							RemoteIPView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth*3),
 								onValueChange = { updateRemoteIP(it) })
-							RemotePortView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*4, 0.dp),
+							RemotePortView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth*4),
 								onValueChange = { updateRemotePort(it) })
-							ClearIconView(modifier = Modifier.size(clearWidth).offset(spaceWidth*5, 0.dp)) {
+							ClearIconView(modifier = Modifier.size(clearWidth).offset(spaceWidth*5)) {
 								deleteList()
 							}
 						}
@@ -259,9 +258,12 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 }
 
 @Composable
-private fun LocalPortView(state : UdpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
+private fun LocalPortView(state : UdpState,
+						  enabled : Boolean,
+						  modifier : Modifier,
+						  onValueChange : (value : String) -> Unit) {
 	OutlinedTextField(value = state.localPort, onValueChange = { onValueChange(it) },
-		label = { Text(text = "本機Port") }, modifier = modifier, maxLines = 1,
+		label = { Text(text = "本機Port") }, enabled = enabled, modifier = modifier, maxLines = 1,
 		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state.isLocalPortError,
 		supportingText = { if (state.isLocalPortError) Text(text = "Wrong") },
 		colors = OutlinedTextFieldDefaults.colors(
