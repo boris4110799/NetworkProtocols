@@ -135,28 +135,28 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 			when (orientation) {
 				Configuration.ORIENTATION_PORTRAIT  -> {
 					BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-						val spacerWidth = 8.dp
-						val contentWidth = maxWidth.minus(spacerWidth.times(3)).div(2)
+						val spaceWidth = 8.dp
+						val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
 						Row(modifier = Modifier.height(IntrinsicSize.Min),
 							verticalAlignment = Alignment.CenterVertically) {
 							LocalPortView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spacerWidth, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth, 0.dp),
 								onValueChange = { updateLocalPort(it) })
 							SwitchView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spacerWidth*2, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*2, 0.dp),
 								onCheckedChange = { updateSwitch(it) })
 						}
 					}
 					BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-						val spacerWidth = 8.dp
-						val contentWidth = maxWidth.minus(spacerWidth.times(3)).div(2)
+						val spaceWidth = 8.dp
+						val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
 						Row(modifier = Modifier.height(IntrinsicSize.Min),
 							verticalAlignment = Alignment.CenterVertically) {
 							RemoteIPView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spacerWidth, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth, 0.dp),
 								onValueChange = { updateRemoteIP(it) })
 							RemotePortView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spacerWidth*2, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*2, 0.dp),
 								onValueChange = { updateRemotePort(it) })
 						}
 					}
@@ -186,13 +186,13 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 							BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(inputHeight),
 								contentAlignment = Alignment.Center) {
 								val sendWidth = 60.dp
-								val spacerWidth = 8.dp
-								val inputWidth = maxWidth-sendWidth-spacerWidth
+								val spaceWidth = 8.dp
+								val inputWidth = maxWidth-sendWidth-spaceWidth
 								Row(modifier = Modifier.height(IntrinsicSize.Min),
 									verticalAlignment = Alignment.CenterVertically) {
 									InputView(state = state, modifier = Modifier.width(inputWidth),
 										onValueChange = { updateInputText(it) })
-									Spacer(modifier = Modifier.size(spacerWidth))
+									Spacer(modifier = Modifier.size(spaceWidth))
 									SendIconView(modifier = Modifier.size(sendWidth)) { updateError() }
 								}
 							}
@@ -202,23 +202,23 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 				
 				Configuration.ORIENTATION_LANDSCAPE -> {
 					BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-						val spacerWidth = 8.dp
+						val spaceWidth = 8.dp
 						val clearWidth = 50.dp
-						val contentWidth = maxWidth.minus(spacerWidth.times(6)).minus(clearWidth).div(4)
+						val contentWidth = maxWidth.minus(spaceWidth.times(6)).minus(clearWidth).div(4)
 						Row(modifier = Modifier.height(70.dp), verticalAlignment = Alignment.CenterVertically) {
 							LocalPortView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spacerWidth, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth, 0.dp),
 								onValueChange = { updateLocalPort(it) })
 							SwitchView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spacerWidth*2, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*2, 0.dp),
 								onCheckedChange = { updateSwitch(it) })
 							RemoteIPView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spacerWidth*3, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*3, 0.dp),
 								onValueChange = { updateRemoteIP(it) })
 							RemotePortView(state = state,
-								modifier = Modifier.width(contentWidth).offset(spacerWidth*4, 0.dp),
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*4, 0.dp),
 								onValueChange = { updateRemotePort(it) })
-							ClearIconView(modifier = Modifier.size(clearWidth).offset(spacerWidth*5, 0.dp)) {
+							ClearIconView(modifier = Modifier.size(clearWidth).offset(spaceWidth*5, 0.dp)) {
 								deleteList()
 							}
 						}
@@ -240,13 +240,13 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 							BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(inputHeight),
 								contentAlignment = Alignment.Center) {
 								val sendWidth = 50.dp
-								val spacerWidth = 8.dp
-								val inputWidth = maxWidth-sendWidth-spacerWidth
+								val spaceWidth = 8.dp
+								val inputWidth = maxWidth-sendWidth-spaceWidth
 								Row(modifier = Modifier.height(IntrinsicSize.Min),
 									verticalAlignment = Alignment.CenterVertically) {
 									InputView(state = state, modifier = Modifier.width(inputWidth),
 										onValueChange = { updateInputText(it) })
-									Spacer(modifier = Modifier.size(spacerWidth))
+									Spacer(modifier = Modifier.size(spaceWidth))
 									SendIconView(modifier = Modifier.size(sendWidth)) { updateError() }
 								}
 							}

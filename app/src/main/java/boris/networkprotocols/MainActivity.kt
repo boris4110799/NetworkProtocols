@@ -57,6 +57,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import boris.networkprotocols.tcp.TcpView
+import boris.networkprotocols.tcp.TcpViewModel
 import boris.networkprotocols.udp.UdpView
 import boris.networkprotocols.udp.UdpViewModel
 import boris.networkprotocols.ui.navigation.Screen
@@ -68,6 +69,7 @@ import java.net.Inet4Address
 
 class MainActivity : ComponentActivity() {
 	private val udpViewModel : UdpViewModel by viewModels()
+	private val tcpViewModel : TcpViewModel by viewModels()
 	
 	//StateFlow to collect the info of local IP
 	private var _localIPFlow = MutableStateFlow("")
@@ -191,7 +193,7 @@ class MainActivity : ComponentActivity() {
 								UdpView(udpViewModel, orientation)
 							}
 							composable(Screen.TCP.name) {
-								TcpView()
+								TcpView(tcpViewModel, orientation)
 							}
 						}
 					}
