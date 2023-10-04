@@ -73,6 +73,11 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	 */
 	val enabled by remember(state.isListening) { mutableStateOf(!state.isListening) }
 	
+	/**
+	 * Control textField's expanded property
+	 */
+	var expanded by rememberSaveable { mutableStateOf(true) }
+	
 	val listState = rememberLazyListState()
 	
 	/**
@@ -84,7 +89,6 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	 * Store the state of the list size
 	 */
 	var sizeState by rememberSaveable { mutableIntStateOf(0) }
-	var expanded by rememberSaveable { mutableStateOf(true) }
 	
 	fun updateLocalPort(value : String) {
 		udpViewModel.updateUIState(localPort = value)
@@ -189,7 +193,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 									horizontalArrangement = Arrangement.SpaceBetween,
 									verticalAlignment = Alignment.CenterVertically) {
 									SwitchView(state = state,
-										modifier = Modifier.width(contentWidth).offset(spaceWidth),
+										modifier = Modifier.width(contentWidth),
 										onCheckedChange = { updateSwitch(it) })
 									Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Expand",
 										modifier = Modifier.aspectRatio(1f).offset(-spaceWidth))

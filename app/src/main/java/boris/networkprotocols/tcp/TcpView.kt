@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +21,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +61,7 @@ import java.net.Inet4Address
 /**
  * Tcp screen
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 	/**
@@ -68,6 +75,11 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 	val enabled by remember(state.isListening, state.isConnecting) {
 		mutableStateOf(!state.isListening && !state.isConnecting)
 	}
+	
+	/**
+	 * Control textField's expanded property
+	 */
+	var expanded by rememberSaveable { mutableStateOf(true) }
 	
 	val listState = rememberLazyListState()
 	
@@ -146,38 +158,64 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 		Column {
 			when (orientation) {
 				Configuration.ORIENTATION_PORTRAIT  -> {
-					BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-						val spaceWidth = 8.dp
-						val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
-						Row(modifier = Modifier.height(IntrinsicSize.Min),
-							verticalAlignment = Alignment.CenterVertically) {
-							LocalPortView(state = state, enabled = enabled,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth),
-								onValueChange = { updateLocalPort(it) })
-							ListeningView(state = state, enabled = !state.isConnecting,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
-								onCheckedChange = { updateListening(it) })
+					Card(modifier = Modifier.fillMaxWidth(), onClick = { expanded = !expanded }) {
+						if (expanded) {
+							BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+								val spaceWidth = 8.dp
+								val contentWidth = maxWidth.minus(spaceWidth.times(4)).div(4)
+								Row(modifier = Modifier.height(IntrinsicSize.Min),
+									verticalAlignment = Alignment.CenterVertically) {
+									LocalPortView(state = state, enabled = enabled,
+										modifier = Modifier.width(contentWidth.times(2)).offset(spaceWidth),
+										onValueChange = { updateLocalPort(it) })
+									ListeningView(state = state, enabled = !state.isConnecting,
+										modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
+										onCheckedChange = { updateListening(it) })
+									Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Expand",
+										modifier = Modifier.width(contentWidth).aspectRatio(2f).offset(spaceWidth*3))
+								}
+							}
+							BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+								val spaceWidth = 8.dp
+								val contentWidth = maxWidth.minus(spaceWidth.times(4)).div(8)
+								Row(modifier = Modifier.height(IntrinsicSize.Min),
+									verticalAlignment = Alignment.CenterVertically) {
+									RemoteIPView(state = state, enabled = enabled,
+										modifier = Modifier.width(contentWidth.times(4)).offset(spaceWidth),
+										onValueChange = { updateRemoteIP(it) })
+									RemotePortView(state = state, enabled = enabled,
+										modifier = Modifier.width(contentWidth.times(2)).offset(spaceWidth*2),
+										onValueChange = { updateRemotePort(it) })
+									ConnectingView(state = state, enabled = !state.isListening,
+										modifier = Modifier.width(contentWidth.times(2)).offset(spaceWidth*3),
+										onCheckedChange = { updateConnecting(it) })
+								}
+							}
+						}
+						else {
+							BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+								val spaceWidth = 8.dp
+								val contentWidth = maxWidth.minus(spaceWidth.times(4)).div(3)
+								Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+									horizontalArrangement = Arrangement.SpaceBetween,
+									verticalAlignment = Alignment.CenterVertically) {
+									ListeningView(state = state, enabled = !state.isConnecting,
+										modifier = Modifier.width(contentWidth),
+										onCheckedChange = { updateListening(it) })
+									ConnectingView(state = state, enabled = !state.isListening,
+										modifier = Modifier.width(contentWidth),
+										onCheckedChange = { updateConnecting(it) })
+									Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Expand",
+										modifier = Modifier.aspectRatio(1f).offset(-spaceWidth))
+								}
+							}
 						}
 					}
-					BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-						val spaceWidth = 8.dp
-						val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
-						Row(modifier = Modifier.height(IntrinsicSize.Min),
-							verticalAlignment = Alignment.CenterVertically) {
-							RemoteIPView(state = state, enabled = enabled,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth),
-								onValueChange = { updateRemoteIP(it) })
-							RemotePortView(state = state, enabled = enabled,
-								modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
-								onValueChange = { updateRemotePort(it) })
-						}
-					}
+					
 					Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
 						horizontalArrangement = Arrangement.SpaceBetween,
 						verticalAlignment = Alignment.CenterVertically) {
 						Text(text = "訊息欄", modifier = Modifier.padding(start = 8.dp), fontSize = 24.sp)
-						ConnectingView(state = state, enabled = !state.isListening,
-							modifier = Modifier.height(IntrinsicSize.Min), onCheckedChange = { updateConnecting(it) })
 						ClearIconView(modifier = Modifier.aspectRatio(1f).offset((-8).dp)) {
 							deleteList()
 						}
