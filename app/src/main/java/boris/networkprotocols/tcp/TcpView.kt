@@ -349,7 +349,7 @@ private fun ConnectingView(state : TcpState,
 						   onCheckedChange : (value : Boolean) -> Unit) {
 	Row(modifier = modifier, horizontalArrangement = Arrangement.Center,
 		verticalAlignment = Alignment.CenterVertically) {
-		Text(text = "連線")
+		Text(text = "連接")
 		Spacer(modifier = Modifier.size(5.dp))
 		Switch(enabled = enabled, checked = state.isConnecting, onCheckedChange = { onCheckedChange(it) })
 	}
