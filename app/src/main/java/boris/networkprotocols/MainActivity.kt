@@ -41,6 +41,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -121,8 +122,8 @@ class MainActivity : ComponentActivity() {
 		val focusRequester = remember { FocusRequester() }
 		
 		//Current screen which be selected
-		var selectItem by remember { mutableStateOf(Screen.UDP.name) }
-		val handleBackHandler = remember(selectItem) { false }
+		var selectedItem by rememberSaveable { mutableStateOf(Screen.UDP.name) }
+		val handleBackHandler = remember(selectedItem) { false }
 		val localIP : String by localIPFlow.collectAsState(initial = "")
 		
 		//Store the orientation state
@@ -146,7 +147,7 @@ class MainActivity : ComponentActivity() {
 					Configuration.ORIENTATION_LANDSCAPE -> 0.3f
 					else                                -> 0.4f
 				})) {
-					NavigationDrawerItem(label = { Text(Screen.UDP.name) }, selected = selectItem == Screen.UDP.name,
+					NavigationDrawerItem(label = { Text(Screen.UDP.name) }, selected = selectedItem == Screen.UDP.name,
 						onClick = {
 							scope.launch { drawerState.close() }
 							navController.navigate(Screen.UDP.name) {
@@ -157,9 +158,9 @@ class MainActivity : ComponentActivity() {
 								}
 								restoreState = true
 							}
-							selectItem = "UDP"
+							selectedItem = "UDP"
 						})
-					NavigationDrawerItem(label = { Text(Screen.TCP.name) }, selected = selectItem == Screen.TCP.name,
+					NavigationDrawerItem(label = { Text(Screen.TCP.name) }, selected = selectedItem == Screen.TCP.name,
 						onClick = {
 							scope.launch { drawerState.close() }
 							navController.navigate(Screen.TCP.name) {
@@ -170,13 +171,13 @@ class MainActivity : ComponentActivity() {
 								}
 								restoreState = true
 							}
-							selectItem = "TCP"
+							selectedItem = "TCP"
 						})
 				}
 			}) {
 				Scaffold(modifier = Modifier.focusRequester(focusRequester).focusable(true), topBar = {
 					TopAppBar(title = {
-						Text(text = selectItem, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Justify,
+						Text(text = selectedItem, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Justify,
 							color = Color.White)
 					}, navigationIcon = {
 						IconButton(onClick = { scope.launch { drawerState.open() } }) {
