@@ -20,6 +20,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +60,7 @@ import java.net.Inet4Address
 /**
  * Udp screen
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	/**
@@ -78,6 +84,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	 * Store the state of the list size
 	 */
 	var sizeState by rememberSaveable { mutableIntStateOf(0) }
+	var expanded by rememberSaveable { mutableStateOf(true) }
 	
 	fun updateLocalPort(value : String) {
 		udpViewModel.updateUIState(localPort = value)
@@ -141,26 +148,53 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 		Column {
 			when (orientation) {
 				Configuration.ORIENTATION_PORTRAIT  -> {
-					BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-						val spaceWidth = 8.dp
-						val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
-						Row(modifier = Modifier.height(IntrinsicSize.Min),
-							verticalAlignment = Alignment.CenterVertically) {
-							LocalPortView(state = state, enabled = enabled, modifier = Modifier.width(contentWidth).offset(spaceWidth),
-								onValueChange = { updateLocalPort(it) })
-							SwitchView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
-								onCheckedChange = { updateSwitch(it) })
+					Card(modifier = Modifier.fillMaxWidth(), onClick = { expanded = !expanded }) {
+						if (expanded) {
+							BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+								val spaceWidth = 8.dp
+								val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
+								Row(modifier = Modifier.height(IntrinsicSize.Min),
+									verticalAlignment = Alignment.CenterVertically) {
+									LocalPortView(state = state, enabled = enabled,
+										modifier = Modifier.width(contentWidth).offset(spaceWidth),
+										onValueChange = { updateLocalPort(it) })
+									SwitchView(state = state,
+										modifier = Modifier.width(contentWidth.div(4).times(3)).offset(spaceWidth*2),
+										onCheckedChange = { updateSwitch(it) })
+									Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Expand",
+										modifier = Modifier.width(contentWidth.div(4))
+											.aspectRatio(1f)
+											.offset(spaceWidth*2))
+								}
+							}
+							BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+								val spaceWidth = 8.dp
+								val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
+								Row(modifier = Modifier.height(IntrinsicSize.Min),
+									verticalAlignment = Alignment.CenterVertically) {
+									RemoteIPView(state = state,
+										modifier = Modifier.width(contentWidth).offset(spaceWidth),
+										onValueChange = { updateRemoteIP(it) })
+									RemotePortView(state = state,
+										modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
+										onValueChange = { updateRemotePort(it) })
+								}
+							}
 						}
-					}
-					BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-						val spaceWidth = 8.dp
-						val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
-						Row(modifier = Modifier.height(IntrinsicSize.Min),
-							verticalAlignment = Alignment.CenterVertically) {
-							RemoteIPView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth),
-								onValueChange = { updateRemoteIP(it) })
-							RemotePortView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
-								onValueChange = { updateRemotePort(it) })
+						else {
+							BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+								val spaceWidth = 8.dp
+								val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
+								Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+									horizontalArrangement = Arrangement.SpaceBetween,
+									verticalAlignment = Alignment.CenterVertically) {
+									SwitchView(state = state,
+										modifier = Modifier.width(contentWidth).offset(spaceWidth),
+										onCheckedChange = { updateSwitch(it) })
+									Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Expand",
+										modifier = Modifier.aspectRatio(1f).offset(-spaceWidth))
+								}
+							}
 						}
 					}
 					Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
@@ -209,7 +243,8 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 						val clearWidth = 50.dp
 						val contentWidth = maxWidth.minus(spaceWidth.times(6)).minus(clearWidth).div(4)
 						Row(modifier = Modifier.height(70.dp), verticalAlignment = Alignment.CenterVertically) {
-							LocalPortView(state = state, enabled = enabled, modifier = Modifier.width(contentWidth).offset(spaceWidth),
+							LocalPortView(state = state, enabled = enabled,
+								modifier = Modifier.width(contentWidth).offset(spaceWidth),
 								onValueChange = { updateLocalPort(it) })
 							SwitchView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
 								onCheckedChange = { updateSwitch(it) })
