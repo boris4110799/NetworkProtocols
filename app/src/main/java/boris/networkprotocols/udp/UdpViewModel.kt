@@ -31,7 +31,8 @@ class UdpViewModel : ViewModel() {
 	private val _msgStateFlow = MutableStateFlow(arrayListOf<Pair<String, String>>())
 	val msgStateFlow = _msgStateFlow.asStateFlow()
 	private val msgList = arrayListOf<Pair<String, String>>()
-	private var ds : DatagramSocket? = null
+	private var rcvSocket : DatagramSocket? = null
+	private val sendSocket = DatagramSocket()
 	private var port = 8888
 	private var isServerOn = false
 	private val tag = "UDP"
@@ -77,7 +78,7 @@ class UdpViewModel : ViewModel() {
 		viewModelScope.launch(Dispatchers.IO) {
 			//Create a socket
 			try {
-				ds = DatagramSocket(port).apply { soTimeout = 5000 }
+				rcvSocket = DatagramSocket(port).apply { soTimeout = 5000 }
 				Log.d(tag, "Server已啟動")
 			}
 			catch (e : SocketException) {
@@ -86,18 +87,18 @@ class UdpViewModel : ViewModel() {
 			}
 			
 			//Continuously collect the incoming message
-			val msgRcv = ByteArray(1024)
-			val dpRcv = DatagramPacket(msgRcv, msgRcv.size)
+			val bytes = ByteArray(1024)
+			val rcvPacket = DatagramPacket(bytes, bytes.size)
 			while (isServerOn) {
 				Log.d(tag, "Server監聽中..")
 				try {
-					if (ds != null) {
-						ds!!.receive(dpRcv)
-						val string = String(dpRcv.data, dpRcv.offset, dpRcv.length)
-						Log.d(tag, "收到資料： $string")
+					if (rcvSocket != null) {
+						rcvSocket!!.receive(rcvPacket)
+						val rcvMsg = String(rcvPacket.data, rcvPacket.offset, rcvPacket.length)
+						Log.d(tag, "收到資料： $rcvMsg")
 						
 						withContext(Dispatchers.Main) {
-							addMsg(dpRcv.address.hostAddress!!.toString(), string)
+							addMsg(rcvPacket.address.hostAddress!!.toString(), rcvMsg)
 						}
 					}
 				}
@@ -113,12 +114,12 @@ class UdpViewModel : ViewModel() {
 	 */
 	fun changeServerStatus(isOn : Boolean) {
 		isServerOn = isOn
-		if (isOn && ds == null) {
+		if (isOn && rcvSocket == null) {
 			startThread()
 		}
-		else if (!isOn && ds != null) {
-			ds!!.close()
-			ds = null
+		else if (!isOn && rcvSocket != null) {
+			rcvSocket!!.close()
+			rcvSocket = null
 			Log.d(tag, "Server已關閉")
 		}
 	}
@@ -136,9 +137,8 @@ class UdpViewModel : ViewModel() {
 	fun send(msg : String, remoteIP : InetAddress, remotePort : Int) {
 		viewModelScope.launch(Dispatchers.IO) {
 			Log.d(tag, "客户端IP：$remoteIP:$remotePort")
-			val datagramSocket = DatagramSocket()
-			val dpSend = DatagramPacket(msg.toByteArray(), msg.toByteArray().size, remoteIP, remotePort)
-			datagramSocket.send(dpSend)
+			val sendPacket = DatagramPacket(msg.toByteArray(), msg.toByteArray().size, remoteIP, remotePort)
+			sendSocket.send(sendPacket)
 		}
 	}
 }
