@@ -159,10 +159,10 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 								val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
 								Row(modifier = Modifier.height(IntrinsicSize.Min),
 									verticalAlignment = Alignment.CenterVertically) {
-									LocalPortView(state = state, enabled = enabled,
+									LocalPortView(state = { state }, enabled = { enabled },
 										modifier = Modifier.width(contentWidth).offset(spaceWidth),
 										onValueChange = { updateLocalPort(it) })
-									SwitchView(state = state,
+									SwitchView(state = { state },
 										modifier = Modifier.width(contentWidth.div(4).times(3)).offset(spaceWidth*2),
 										onCheckedChange = { updateSwitch(it) })
 									Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Expand",
@@ -176,10 +176,10 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 								val contentWidth = maxWidth.minus(spaceWidth.times(3)).div(2)
 								Row(modifier = Modifier.height(IntrinsicSize.Min),
 									verticalAlignment = Alignment.CenterVertically) {
-									RemoteIPView(state = state,
+									RemoteIPView(state = { state },
 										modifier = Modifier.width(contentWidth).offset(spaceWidth),
 										onValueChange = { updateRemoteIP(it) })
-									RemotePortView(state = state,
+									RemotePortView(state = { state },
 										modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
 										onValueChange = { updateRemotePort(it) })
 								}
@@ -192,8 +192,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 								Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
 									horizontalArrangement = Arrangement.SpaceBetween,
 									verticalAlignment = Alignment.CenterVertically) {
-									SwitchView(state = state,
-										modifier = Modifier.width(contentWidth),
+									SwitchView(state = { state }, modifier = Modifier.width(contentWidth),
 										onCheckedChange = { updateSwitch(it) })
 									Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Expand",
 										modifier = Modifier.aspectRatio(1f).offset(-spaceWidth))
@@ -231,7 +230,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 								val inputWidth = maxWidth-sendWidth-spaceWidth
 								Row(modifier = Modifier.height(IntrinsicSize.Min),
 									verticalAlignment = Alignment.CenterVertically) {
-									InputView(state = state, modifier = Modifier.width(inputWidth),
+									InputView(state = { state }, modifier = Modifier.width(inputWidth),
 										onValueChange = { updateInputText(it) })
 									Spacer(modifier = Modifier.size(spaceWidth))
 									SendIconView(modifier = Modifier.size(sendWidth)) { updateError() }
@@ -247,14 +246,16 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 						val clearWidth = 50.dp
 						val contentWidth = maxWidth.minus(spaceWidth.times(6)).minus(clearWidth).div(4)
 						Row(modifier = Modifier.height(70.dp), verticalAlignment = Alignment.CenterVertically) {
-							LocalPortView(state = state, enabled = enabled,
+							LocalPortView(state = { state }, enabled = { enabled },
 								modifier = Modifier.width(contentWidth).offset(spaceWidth),
 								onValueChange = { updateLocalPort(it) })
-							SwitchView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
+							SwitchView(state = { state }, modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
 								onCheckedChange = { updateSwitch(it) })
-							RemoteIPView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth*3),
+							RemoteIPView(state = { state },
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*3),
 								onValueChange = { updateRemoteIP(it) })
-							RemotePortView(state = state, modifier = Modifier.width(contentWidth).offset(spaceWidth*4),
+							RemotePortView(state = { state },
+								modifier = Modifier.width(contentWidth).offset(spaceWidth*4),
 								onValueChange = { updateRemotePort(it) })
 							ClearIconView(modifier = Modifier.size(clearWidth).offset(spaceWidth*5)) {
 								deleteList()
@@ -282,7 +283,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 								val inputWidth = maxWidth-sendWidth-spaceWidth
 								Row(modifier = Modifier.height(IntrinsicSize.Min),
 									verticalAlignment = Alignment.CenterVertically) {
-									InputView(state = state, modifier = Modifier.width(inputWidth),
+									InputView(state = { state }, modifier = Modifier.width(inputWidth),
 										onValueChange = { updateInputText(it) })
 									Spacer(modifier = Modifier.size(spaceWidth))
 									SendIconView(modifier = Modifier.size(sendWidth)) { updateError() }
@@ -297,14 +298,14 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 }
 
 @Composable
-private fun LocalPortView(state : UdpState,
-						  enabled : Boolean,
+private fun LocalPortView(state : () -> UdpState,
+						  enabled : () -> Boolean,
 						  modifier : Modifier,
 						  onValueChange : (value : String) -> Unit) {
-	OutlinedTextField(value = state.localPort, onValueChange = { onValueChange(it) },
-		label = { Text(text = "本機Port") }, enabled = enabled, modifier = modifier, maxLines = 1,
-		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state.isLocalPortError,
-		supportingText = { if (state.isLocalPortError) Text(text = "Wrong") },
+	OutlinedTextField(value = state().localPort, onValueChange = { onValueChange(it) },
+		label = { Text(text = "本機Port") }, enabled = enabled(), modifier = modifier, maxLines = 1,
+		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state().isLocalPortError,
+		supportingText = { if (state().isLocalPortError) Text(text = "Wrong") },
 		colors = OutlinedTextFieldDefaults.colors(
 			errorBorderColor = Color.Red,
 			errorLabelColor = Color.Red,
@@ -313,20 +314,21 @@ private fun LocalPortView(state : UdpState,
 }
 
 @Composable
-private fun SwitchView(state : UdpState, modifier : Modifier, onCheckedChange : (value : Boolean) -> Unit) {
+private fun SwitchView(state : () -> UdpState, modifier : Modifier, onCheckedChange : (value : Boolean) -> Unit) {
 	Row(modifier = modifier, horizontalArrangement = Arrangement.Center,
 		verticalAlignment = Alignment.CenterVertically) {
 		Text(text = "監聽")
 		Spacer(modifier = Modifier.size(5.dp))
-		Switch(checked = state.isListening, onCheckedChange = { onCheckedChange(it) })
+		Switch(checked = state().isListening, onCheckedChange = { onCheckedChange(it) })
 	}
 }
 
 @Composable
-private fun RemoteIPView(state : UdpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
-	OutlinedTextField(value = state.remoteIP, onValueChange = { onValueChange(it) }, label = { Text(text = "遠端IP") },
-		modifier = modifier, maxLines = 1, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-		isError = state.isRemoteIPError, supportingText = { if (state.isRemoteIPError) Text(text = "Wrong") },
+private fun RemoteIPView(state : () -> UdpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
+	OutlinedTextField(value = state().remoteIP, onValueChange = { onValueChange(it) },
+		label = { Text(text = "遠端IP") }, modifier = modifier, maxLines = 1,
+		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state().isRemoteIPError,
+		supportingText = { if (state().isRemoteIPError) Text(text = "Wrong") },
 		colors = OutlinedTextFieldDefaults.colors(
 			errorBorderColor = Color.Red,
 			errorLabelColor = Color.Red,
@@ -335,11 +337,11 @@ private fun RemoteIPView(state : UdpState, modifier : Modifier, onValueChange : 
 }
 
 @Composable
-private fun RemotePortView(state : UdpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
-	OutlinedTextField(value = state.remotePort, onValueChange = { onValueChange(it) },
+private fun RemotePortView(state : () -> UdpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
+	OutlinedTextField(value = state().remotePort, onValueChange = { onValueChange(it) },
 		label = { Text(text = "遠端Port") }, modifier = modifier, maxLines = 1,
-		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state.isRemotePortError,
-		supportingText = { if (state.isRemotePortError) Text(text = "Wrong") },
+		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state().isRemotePortError,
+		supportingText = { if (state().isRemotePortError) Text(text = "Wrong") },
 		colors = OutlinedTextFieldDefaults.colors(
 			errorBorderColor = Color.Red,
 			errorLabelColor = Color.Red,
@@ -348,8 +350,8 @@ private fun RemotePortView(state : UdpState, modifier : Modifier, onValueChange 
 }
 
 @Composable
-private fun InputView(state : UdpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
-	OutlinedTextField(value = state.inputText, onValueChange = { onValueChange(it) },
+private fun InputView(state : () -> UdpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
+	OutlinedTextField(value = state().inputText, onValueChange = { onValueChange(it) },
 		label = { Text(text = "請輸入內容") }, modifier = modifier, textStyle = TextStyle(fontSize = 20.sp),
 		maxLines = 1)
 }

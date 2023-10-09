@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -165,10 +164,10 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 								val contentWidth = maxWidth.minus(spaceWidth.times(4)).div(4)
 								Row(modifier = Modifier.height(IntrinsicSize.Min),
 									verticalAlignment = Alignment.CenterVertically) {
-									LocalPortView(state = state, enabled = enabled,
+									LocalPortView(state = { state }, enabled = { enabled },
 										modifier = Modifier.width(contentWidth.times(2)).offset(spaceWidth),
 										onValueChange = { updateLocalPort(it) })
-									ListeningView(state = state, enabled = !state.isConnecting,
+									ListeningView(state = { state }, enabled = { !state.isConnecting },
 										modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
 										onCheckedChange = { updateListening(it) })
 									Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Expand",
@@ -180,13 +179,13 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 								val contentWidth = maxWidth.minus(spaceWidth.times(4)).div(8)
 								Row(modifier = Modifier.height(IntrinsicSize.Min),
 									verticalAlignment = Alignment.CenterVertically) {
-									RemoteIPView(state = state, enabled = enabled,
+									RemoteIPView(state = { state }, enabled = { enabled },
 										modifier = Modifier.width(contentWidth.times(4)).offset(spaceWidth),
 										onValueChange = { updateRemoteIP(it) })
-									RemotePortView(state = state, enabled = enabled,
+									RemotePortView(state = { state }, enabled = { enabled },
 										modifier = Modifier.width(contentWidth.times(2)).offset(spaceWidth*2),
 										onValueChange = { updateRemotePort(it) })
-									ConnectingView(state = state, enabled = !state.isListening,
+									ConnectingView(state = { state }, enabled = { !state.isListening },
 										modifier = Modifier.width(contentWidth.times(2)).offset(spaceWidth*3),
 										onCheckedChange = { updateConnecting(it) })
 								}
@@ -199,10 +198,10 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 								Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
 									horizontalArrangement = Arrangement.SpaceBetween,
 									verticalAlignment = Alignment.CenterVertically) {
-									ListeningView(state = state, enabled = !state.isConnecting,
+									ListeningView(state = { state }, enabled = { !state.isConnecting },
 										modifier = Modifier.width(contentWidth),
 										onCheckedChange = { updateListening(it) })
-									ConnectingView(state = state, enabled = !state.isListening,
+									ConnectingView(state = { state }, enabled = { !state.isListening },
 										modifier = Modifier.width(contentWidth),
 										onCheckedChange = { updateConnecting(it) })
 									Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Expand",
@@ -242,7 +241,7 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 								val inputWidth = maxWidth-sendWidth-spaceWidth
 								Row(modifier = Modifier.height(IntrinsicSize.Min),
 									verticalAlignment = Alignment.CenterVertically) {
-									InputView(state = state, modifier = Modifier.width(inputWidth),
+									InputView(state = { state }, modifier = Modifier.width(inputWidth),
 										onValueChange = { updateInputText(it) })
 									Spacer(modifier = Modifier.size(spaceWidth))
 									SendIconView(modifier = Modifier.size(sendWidth)) { updateSend() }
@@ -258,19 +257,19 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 						val clearWidth = 50.dp
 						val contentWidth = maxWidth.minus(spaceWidth.times(7)).minus(clearWidth).div(5)
 						Row(modifier = Modifier.height(70.dp), verticalAlignment = Alignment.CenterVertically) {
-							LocalPortView(state = state, enabled = enabled,
+							LocalPortView(state = { state }, enabled = { enabled },
 								modifier = Modifier.width(contentWidth).offset(spaceWidth),
 								onValueChange = { updateLocalPort(it) })
-							ListeningView(state = state, enabled = !state.isConnecting,
+							ListeningView(state = { state }, enabled = { !state.isConnecting },
 								modifier = Modifier.width(contentWidth).offset(spaceWidth*2),
 								onCheckedChange = { updateListening(it) })
-							RemoteIPView(state = state, enabled = enabled,
+							RemoteIPView(state = { state }, enabled = { enabled },
 								modifier = Modifier.width(contentWidth).offset(spaceWidth*3),
 								onValueChange = { updateRemoteIP(it) })
-							RemotePortView(state = state, enabled = enabled,
+							RemotePortView(state = { state }, enabled = { enabled },
 								modifier = Modifier.width(contentWidth).offset(spaceWidth*4),
 								onValueChange = { updateRemotePort(it) })
-							ConnectingView(state = state, enabled = !state.isListening,
+							ConnectingView(state = { state }, enabled = { !state.isListening },
 								modifier = Modifier.width(contentWidth).offset(spaceWidth*5),
 								onCheckedChange = { updateConnecting(it) })
 							ClearIconView(modifier = Modifier.size(clearWidth).offset(spaceWidth*6)) {
@@ -299,7 +298,7 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 								val inputWidth = maxWidth-sendWidth-spaceWidth
 								Row(modifier = Modifier.height(IntrinsicSize.Min),
 									verticalAlignment = Alignment.CenterVertically) {
-									InputView(state = state, modifier = Modifier.width(inputWidth),
+									InputView(state = { state }, modifier = Modifier.width(inputWidth),
 										onValueChange = { updateInputText(it) })
 									Spacer(modifier = Modifier.size(spaceWidth))
 									SendIconView(modifier = Modifier.size(sendWidth)) { updateSend() }
@@ -314,14 +313,14 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 }
 
 @Composable
-private fun LocalPortView(state : TcpState,
-						  enabled : Boolean,
+private fun LocalPortView(state : () -> TcpState,
+						  enabled : () -> Boolean,
 						  modifier : Modifier,
 						  onValueChange : (value : String) -> Unit) {
-	OutlinedTextField(value = state.localPort, onValueChange = { onValueChange(it) },
-		label = { Text(text = "本機Port") }, enabled = enabled, modifier = modifier, maxLines = 1,
-		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state.isLocalPortError,
-		supportingText = { if (state.isLocalPortError) Text(text = "Wrong") },
+	OutlinedTextField(value = state().localPort, onValueChange = { onValueChange(it) },
+		label = { Text(text = "本機Port") }, enabled = enabled(), modifier = modifier, maxLines = 1,
+		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state().isLocalPortError,
+		supportingText = { if (state().isLocalPortError) Text(text = "Wrong") },
 		colors = OutlinedTextFieldDefaults.colors(
 			errorBorderColor = Color.Red,
 			errorLabelColor = Color.Red,
@@ -330,29 +329,14 @@ private fun LocalPortView(state : TcpState,
 }
 
 @Composable
-private fun RemoteIPView(state : TcpState,
-						 enabled : Boolean,
+private fun RemoteIPView(state : () -> TcpState,
+						 enabled : () -> Boolean,
 						 modifier : Modifier,
 						 onValueChange : (value : String) -> Unit) {
-	OutlinedTextField(value = state.remoteIP, onValueChange = { onValueChange(it) }, label = { Text(text = "遠端IP") },
-		enabled = enabled, modifier = modifier, maxLines = 1,
-		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state.isRemoteIPError,
-		supportingText = { if (state.isRemoteIPError) Text(text = "Wrong") }, colors = OutlinedTextFieldDefaults.colors(
-			errorBorderColor = Color.Red,
-			errorLabelColor = Color.Red,
-			errorSupportingTextColor = Color.Red,
-		))
-}
-
-@Composable
-private fun RemotePortView(state : TcpState,
-						   enabled : Boolean,
-						   modifier : Modifier,
-						   onValueChange : (value : String) -> Unit) {
-	OutlinedTextField(value = state.remotePort, onValueChange = { onValueChange(it) },
-		label = { Text(text = "遠端Port") }, enabled = enabled, modifier = modifier, maxLines = 1,
-		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state.isRemotePortError,
-		supportingText = { if (state.isRemotePortError) Text(text = "Wrong") },
+	OutlinedTextField(value = state().remoteIP, onValueChange = { onValueChange(it) },
+		label = { Text(text = "遠端IP") }, enabled = enabled(), modifier = modifier, maxLines = 1,
+		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state().isRemoteIPError,
+		supportingText = { if (state().isRemoteIPError) Text(text = "Wrong") },
 		colors = OutlinedTextFieldDefaults.colors(
 			errorBorderColor = Color.Red,
 			errorLabelColor = Color.Red,
@@ -361,35 +345,51 @@ private fun RemotePortView(state : TcpState,
 }
 
 @Composable
-private fun InputView(state : TcpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
-	OutlinedTextField(value = state.inputText, onValueChange = { onValueChange(it) },
+private fun RemotePortView(state : () -> TcpState,
+						   enabled : () -> Boolean,
+						   modifier : Modifier,
+						   onValueChange : (value : String) -> Unit) {
+	OutlinedTextField(value = state().remotePort, onValueChange = { onValueChange(it) },
+		label = { Text(text = "遠端Port") }, enabled = enabled(), modifier = modifier, maxLines = 1,
+		keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = state().isRemotePortError,
+		supportingText = { if (state().isRemotePortError) Text(text = "Wrong") },
+		colors = OutlinedTextFieldDefaults.colors(
+			errorBorderColor = Color.Red,
+			errorLabelColor = Color.Red,
+			errorSupportingTextColor = Color.Red,
+		))
+}
+
+@Composable
+private fun InputView(state : () -> TcpState, modifier : Modifier, onValueChange : (value : String) -> Unit) {
+	OutlinedTextField(value = state().inputText, onValueChange = { onValueChange(it) },
 		label = { Text(text = "請輸入內容") }, modifier = modifier, textStyle = TextStyle(fontSize = 20.sp),
 		maxLines = 1)
 }
 
 @Composable
-private fun ListeningView(state : TcpState,
-						  enabled : Boolean,
+private fun ListeningView(state : () -> TcpState,
+						  enabled : () -> Boolean,
 						  modifier : Modifier,
 						  onCheckedChange : (value : Boolean) -> Unit) {
 	Row(modifier = modifier, horizontalArrangement = Arrangement.Center,
 		verticalAlignment = Alignment.CenterVertically) {
 		Text(text = "監聽")
 		Spacer(modifier = Modifier.size(5.dp))
-		Switch(enabled = enabled, checked = state.isListening, onCheckedChange = { onCheckedChange(it) })
+		Switch(enabled = enabled(), checked = state().isListening, onCheckedChange = { onCheckedChange(it) })
 	}
 }
 
 @Composable
-private fun ConnectingView(state : TcpState,
-						   enabled : Boolean,
+private fun ConnectingView(state : () -> TcpState,
+						   enabled : () -> Boolean,
 						   modifier : Modifier,
 						   onCheckedChange : (value : Boolean) -> Unit) {
 	Row(modifier = modifier, horizontalArrangement = Arrangement.Center,
 		verticalAlignment = Alignment.CenterVertically) {
 		Text(text = "連接")
 		Spacer(modifier = Modifier.size(5.dp))
-		Switch(enabled = enabled, checked = state.isConnecting, onCheckedChange = { onCheckedChange(it) })
+		Switch(enabled = enabled(), checked = state().isConnecting, onCheckedChange = { onCheckedChange(it) })
 	}
 }
 
