@@ -149,29 +149,33 @@ class MainActivity : ComponentActivity() {
 				})) {
 					NavigationDrawerItem(label = { Text(Screen.UDP.name) }, selected = selectedItem == Screen.UDP.name,
 						onClick = {
-							scope.launch { drawerState.close() }
-							navController.navigate(Screen.UDP.name) {
-								launchSingleTop = true
-								popUpTo(navController.currentBackStack.value[1].destination.id) {
-									inclusive = true
-									saveState = true
+							scope.launch {
+								drawerState.close()
+								navController.navigate(Screen.UDP.name) {
+									launchSingleTop = true
+									popUpTo(navController.currentBackStack.value[1].destination.id) {
+										inclusive = true
+										saveState = true
+									}
+									restoreState = true
 								}
-								restoreState = true
 							}
-							selectedItem = "UDP"
+							selectedItem = Screen.UDP.name
 						})
 					NavigationDrawerItem(label = { Text(Screen.TCP.name) }, selected = selectedItem == Screen.TCP.name,
 						onClick = {
-							scope.launch { drawerState.close() }
-							navController.navigate(Screen.TCP.name) {
-								launchSingleTop = true
-								popUpTo(navController.currentBackStack.value[1].destination.id) {
-									inclusive = true
-									saveState = true
+							scope.launch {
+								drawerState.close()
+								navController.navigate(Screen.TCP.name) {
+									launchSingleTop = true
+									popUpTo(navController.currentBackStack.value[1].destination.id) {
+										inclusive = true
+										saveState = true
+									}
+									restoreState = true
 								}
-								restoreState = true
 							}
-							selectedItem = "TCP"
+							selectedItem = Screen.TCP.name
 						})
 				}
 			}) {
