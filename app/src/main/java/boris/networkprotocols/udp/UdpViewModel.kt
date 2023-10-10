@@ -1,6 +1,7 @@
 package boris.networkprotocols.udp
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -25,12 +26,14 @@ data class UdpState(val localPort : String = "8888",
 					val isRemotePortError : Boolean = false,
 					val inputText : String = "Hello")
 
+data class UdpMessage(val id : Int, val title : String, val msg : String)
+
 class UdpViewModel : ViewModel() {
 	private val _uiState = MutableStateFlow(UdpState())
 	val uiState : StateFlow<UdpState> = _uiState.asStateFlow()
-	private val _msgStateFlow = MutableStateFlow(arrayListOf<Pair<String, String>>())
+	private val _msgStateFlow = MutableStateFlow(mutableStateListOf<UdpMessage>())
 	val msgStateFlow = _msgStateFlow.asStateFlow()
-	private val msgList = arrayListOf<Pair<String, String>>()
+	private val msgList = mutableStateListOf<UdpMessage>()
 	private var rcvSocket : DatagramSocket? = null
 	private val sendSocket = DatagramSocket()
 	private var port = 8888
@@ -59,8 +62,8 @@ class UdpViewModel : ViewModel() {
 	 * Add a new message to list
 	 */
 	fun addMsg(title : String, msg : String) {
-		msgList.add(Pair(title, msg))
-		_msgStateFlow.value = ArrayList(msgList)
+		msgList.add(UdpMessage(msgList.size, title, msg))
+		viewModelScope.launch { _msgStateFlow.emit(msgList) }
 	}
 	
 	/**
@@ -68,7 +71,7 @@ class UdpViewModel : ViewModel() {
 	 */
 	fun deleteList() {
 		msgList.clear()
-		_msgStateFlow.value = ArrayList(msgList)
+		viewModelScope.launch { _msgStateFlow.emit(mutableStateListOf()) }
 	}
 	
 	/**

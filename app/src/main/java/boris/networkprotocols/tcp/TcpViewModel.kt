@@ -1,6 +1,7 @@
 package boris.networkprotocols.tcp
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -30,12 +31,14 @@ data class TcpState(val localPort : String = "8888",
 					val isConnecting : Boolean = false,
 					val inputText : String = "Hello")
 
+data class TcpMessage(val id : Int, val title : String, val msg : String)
+
 class TcpViewModel : ViewModel() {
 	private val _uiState = MutableStateFlow(TcpState())
 	val uiState : StateFlow<TcpState> = _uiState.asStateFlow()
-	private val _msgStateFlow = MutableStateFlow(arrayListOf<Pair<String, String>>())
+	private val _msgStateFlow = MutableStateFlow(mutableStateListOf<TcpMessage>())
 	val msgStateFlow = _msgStateFlow.asStateFlow()
-	private val msgList = arrayListOf<Pair<String, String>>()
+	private val msgList = mutableStateListOf<TcpMessage>()
 	private var server = TCPServer()
 	private var client = TCPClient()
 	private var port = 8888
@@ -64,8 +67,8 @@ class TcpViewModel : ViewModel() {
 	 * Add a new message to list
 	 */
 	fun addMsg(title : String, msg : String) {
-		msgList.add(Pair(title, msg))
-		_msgStateFlow.value = ArrayList(msgList)
+		msgList.add(TcpMessage(msgList.size, title, msg))
+		viewModelScope.launch { _msgStateFlow.emit(msgList) }
 	}
 	
 	/**
@@ -73,7 +76,7 @@ class TcpViewModel : ViewModel() {
 	 */
 	fun deleteList() {
 		msgList.clear()
-		_msgStateFlow.value = ArrayList(msgList)
+		viewModelScope.launch { _msgStateFlow.emit(mutableStateListOf()) }
 	}
 	
 	/**

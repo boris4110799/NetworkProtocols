@@ -83,7 +83,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	/**
 	 * The message list
 	 */
-	val list : List<Pair<String, String>> by udpViewModel.msgStateFlow.collectAsState()
+	val list by udpViewModel.msgStateFlow.collectAsState()
 	
 	/**
 	 * Store the state of the list size
@@ -214,11 +214,11 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 						Column {
 							LazyColumn(state = listState, contentPadding = PaddingValues(top = 4.dp),
 								modifier = Modifier.height(listHeight)) {
-								items(list) {
+								items(list, key = { item -> item.id }) {
 									Row {
-										Text(text = it.first, modifier = Modifier.weight(0.4f, true),
+										Text(text = it.title, modifier = Modifier.weight(0.4f, true),
 											style = MaterialTheme.typography.titleLarge)
-										Text(text = it.second, modifier = Modifier.weight(0.6f, true),
+										Text(text = it.msg, modifier = Modifier.weight(0.6f, true),
 											style = MaterialTheme.typography.titleLarge)
 									}
 								}
@@ -267,11 +267,11 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 						val listHeight = maxHeight-inputHeight
 						Column {
 							LazyColumn(state = listState, modifier = Modifier.height(listHeight)) {
-								items(list) {
+								items(list, key = { item -> item.id }) {
 									Row {
-										Text(text = it.first, modifier = Modifier.weight(0.4f, true),
+										Text(text = it.title, modifier = Modifier.weight(0.4f, true),
 											style = MaterialTheme.typography.titleLarge)
-										Text(text = it.second, modifier = Modifier.weight(0.6f, true),
+										Text(text = it.msg, modifier = Modifier.weight(0.6f, true),
 											style = MaterialTheme.typography.titleLarge)
 									}
 								}
