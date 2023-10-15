@@ -90,39 +90,23 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	 */
 	var sizeState by rememberSaveable { mutableIntStateOf(0) }
 	
-	fun updateLocalPort(value : String) {
-		udpViewModel.updateUIState(localPort = value)
-	}
-	
-	fun updateSwitch(value : Boolean) {
+	val updateLocalPort : (String) -> Unit = { udpViewModel.updateUIState(localPort = it) }
+	val updateSwitch : (Boolean) -> Unit = {
 		try {
 			val port = state.localPort.toInt()
 			udpViewModel.setPort(port)
-			udpViewModel.changeServerStatus(value)
-			udpViewModel.updateUIState(isLocalPortError = false, isListening = value)
+			udpViewModel.changeServerStatus(it)
+			udpViewModel.updateUIState(isLocalPortError = false, isListening = it)
 		}
 		catch (e : Exception) {
 			udpViewModel.updateUIState(isLocalPortError = true, isListening = false)
 		}
 	}
-	
-	fun updateRemoteIP(value : String) {
-		udpViewModel.updateUIState(remoteIP = value)
-	}
-	
-	fun updateRemotePort(value : String) {
-		udpViewModel.updateUIState(remotePort = value)
-	}
-	
-	fun updateInputText(value : String) {
-		udpViewModel.updateUIState(inputText = value)
-	}
-	
-	fun deleteList() {
-		udpViewModel.deleteList()
-	}
-	
-	fun updateError() {
+	val updateRemoteIP : (String) -> Unit = { udpViewModel.updateUIState(remoteIP = it) }
+	val updateRemotePort : (String) -> Unit = { udpViewModel.updateUIState(remotePort = it) }
+	val updateInputText : (String) -> Unit = { udpViewModel.updateUIState(inputText = it) }
+	val deleteList = { udpViewModel.deleteList() }
+	val updateError = {
 		try {
 			val inet4Address = Inet4Address.getByName(state.remoteIP)
 			udpViewModel.updateUIState(isRemoteIPError = false, isRemotePortError = try {

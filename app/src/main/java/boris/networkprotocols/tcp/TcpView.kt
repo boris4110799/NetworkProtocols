@@ -92,41 +92,28 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 	 */
 	var sizeState by rememberSaveable { mutableIntStateOf(0) }
 	
-	fun updateLocalPort(value : String) {
-		tcpViewModel.updateUIState(localPort = value)
-	}
-	
-	fun updateRemoteIP(value : String) {
-		tcpViewModel.updateUIState(remoteIP = value)
-	}
-	
-	fun updateRemotePort(value : String) {
-		tcpViewModel.updateUIState(remotePort = value)
-	}
-	
-	fun updateInputText(value : String) {
-		tcpViewModel.updateUIState(inputText = value)
-	}
-	
-	fun updateListening(value : Boolean) {
+	val updateLocalPort : (String) -> Unit = { tcpViewModel.updateUIState(localPort = it) }
+	val updateRemoteIP : (String) -> Unit = { tcpViewModel.updateUIState(remoteIP = it) }
+	val updateRemotePort : (String) -> Unit = { tcpViewModel.updateUIState(remotePort = it) }
+	val updateInputText : (String) -> Unit = { tcpViewModel.updateUIState(inputText = it) }
+	val updateListening : (Boolean) -> Unit = {
 		try {
 			val port = state.localPort.toInt()
 			tcpViewModel.setPort(port)
-			tcpViewModel.changeListeningStatus(value)
-			tcpViewModel.updateUIState(isLocalPortError = false, isListening = value)
+			tcpViewModel.changeListeningStatus(it)
+			tcpViewModel.updateUIState(isLocalPortError = false, isListening = it)
 		}
 		catch (e : Exception) {
 			tcpViewModel.updateUIState(isLocalPortError = true, isListening = false)
 		}
 	}
-	
-	fun updateConnecting(value : Boolean) {
+	val updateConnecting : (Boolean) -> Unit = {
 		try {
 			val inet4Address = Inet4Address.getByName(state.remoteIP)
 			try {
 				val port = state.remotePort.toInt()
-				tcpViewModel.changeConnectingStatus(value, inet4Address, port)
-				tcpViewModel.updateUIState(isRemoteIPError = false, isRemotePortError = false, isConnecting = value)
+				tcpViewModel.changeConnectingStatus(it, inet4Address, port)
+				tcpViewModel.updateUIState(isRemoteIPError = false, isRemotePortError = false, isConnecting = it)
 			}
 			catch (e : Exception) {
 				tcpViewModel.updateUIState(isRemoteIPError = false, isRemotePortError = true)
@@ -136,14 +123,8 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 			tcpViewModel.updateUIState(isRemoteIPError = true)
 		}
 	}
-	
-	fun deleteList() {
-		tcpViewModel.deleteList()
-	}
-	
-	fun updateSend() {
-		tcpViewModel.send(state.inputText)
-	}
+	val deleteList = { tcpViewModel.deleteList() }
+	val updateSend = { tcpViewModel.send(state.inputText) }
 	
 	//Scroll to bottommost of list when everytime list size has been changed
 	LaunchedEffect(sizeState) {
