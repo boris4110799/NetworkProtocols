@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -30,9 +29,9 @@ data class UdpMessage(val id : Int, val title : String, val msg : String)
 
 class UdpViewModel : ViewModel() {
 	private val _uiState = MutableStateFlow(UdpState())
-	val uiState : StateFlow<UdpState> = _uiState.asStateFlow()
-	private val _msgStateFlow = MutableStateFlow(mutableStateListOf<UdpMessage>())
-	val msgStateFlow = _msgStateFlow.asStateFlow()
+	val uiState = _uiState.asStateFlow()
+	private val _msgState = MutableStateFlow(mutableStateListOf<UdpMessage>())
+	val msgState = _msgState.asStateFlow()
 	private val msgList = mutableStateListOf<UdpMessage>()
 	private var rcvSocket : DatagramSocket? = null
 	private val sendSocket = DatagramSocket()
@@ -63,7 +62,7 @@ class UdpViewModel : ViewModel() {
 	 */
 	fun addMsg(title : String, msg : String) {
 		msgList.add(UdpMessage(msgList.size, title, msg))
-		viewModelScope.launch { _msgStateFlow.emit(msgList) }
+		viewModelScope.launch { _msgState.emit(msgList) }
 	}
 	
 	/**
@@ -71,7 +70,7 @@ class UdpViewModel : ViewModel() {
 	 */
 	fun deleteList() {
 		msgList.clear()
-		viewModelScope.launch { _msgStateFlow.emit(mutableStateListOf()) }
+		viewModelScope.launch { _msgState.emit(mutableStateListOf()) }
 	}
 	
 	/**

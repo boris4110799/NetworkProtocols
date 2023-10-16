@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -71,9 +72,7 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 	/**
 	 * Control textView's enabled property
 	 */
-	val enabled by remember(state.isListening, state.isConnecting) {
-		mutableStateOf(!state.isListening && !state.isConnecting)
-	}
+	val enabled by remember { derivedStateOf { !state.isListening && !state.isConnecting } }
 	
 	/**
 	 * Control textField's expanded property
@@ -85,7 +84,7 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 	/**
 	 * The message list
 	 */
-	val list by tcpViewModel.msgStateFlow.collectAsState()
+	val list by tcpViewModel.msgState.collectAsState()
 	
 	/**
 	 * Store the state of the list size
@@ -129,7 +128,7 @@ fun TcpView(tcpViewModel : TcpViewModel, orientation : Int) {
 	//Scroll to bottommost of list when everytime list size has been changed
 	LaunchedEffect(sizeState) {
 		snapshotFlow { list.size }.collect {
-			if (sizeState != list.size) listState.scrollToItem(sizeState, 0)
+			if (sizeState != list.size) listState.animateScrollToItem(sizeState, 0)
 			sizeState = it
 		}
 	}

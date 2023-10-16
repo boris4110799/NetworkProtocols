@@ -36,8 +36,8 @@ data class TcpMessage(val id : Int, val title : String, val msg : String)
 class TcpViewModel : ViewModel() {
 	private val _uiState = MutableStateFlow(TcpState())
 	val uiState : StateFlow<TcpState> = _uiState.asStateFlow()
-	private val _msgStateFlow = MutableStateFlow(mutableStateListOf<TcpMessage>())
-	val msgStateFlow = _msgStateFlow.asStateFlow()
+	private val _msgState = MutableStateFlow(mutableStateListOf<TcpMessage>())
+	val msgState = _msgState.asStateFlow()
 	private val msgList = mutableStateListOf<TcpMessage>()
 	private var server = TCPServer()
 	private var client = TCPClient()
@@ -68,7 +68,7 @@ class TcpViewModel : ViewModel() {
 	 */
 	fun addMsg(title : String, msg : String) {
 		msgList.add(TcpMessage(msgList.size, title, msg))
-		viewModelScope.launch { _msgStateFlow.emit(msgList) }
+		viewModelScope.launch { _msgState.emit(msgList) }
 	}
 	
 	/**
@@ -76,7 +76,7 @@ class TcpViewModel : ViewModel() {
 	 */
 	fun deleteList() {
 		msgList.clear()
-		viewModelScope.launch { _msgStateFlow.emit(mutableStateListOf()) }
+		viewModelScope.launch { _msgState.emit(mutableStateListOf()) }
 	}
 	
 	/**

@@ -1,6 +1,7 @@
 package boris.networkprotocols.udp
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -71,7 +73,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	/**
 	 * Control textView's enabled property
 	 */
-	val enabled by remember(state.isListening) { mutableStateOf(!state.isListening) }
+	val enabled by remember { derivedStateOf { !state.isListening } }
 	
 	/**
 	 * Control textField's expanded property
@@ -83,7 +85,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	/**
 	 * The message list
 	 */
-	val list by udpViewModel.msgStateFlow.collectAsState()
+	val list by udpViewModel.msgState.collectAsState()
 	
 	/**
 	 * Store the state of the list size
@@ -127,7 +129,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 	//Scroll to bottommost of list when everytime list size has been changed
 	LaunchedEffect(sizeState) {
 		snapshotFlow { list.size }.collect {
-			if (sizeState != list.size) listState.scrollToItem(sizeState, 0)
+			if (sizeState != list.size) listState.animateScrollToItem(sizeState, 0)
 			sizeState = it
 		}
 	}
@@ -198,7 +200,7 @@ fun UdpView(udpViewModel : UdpViewModel, orientation : Int) {
 						Column {
 							LazyColumn(state = listState, contentPadding = PaddingValues(top = 4.dp),
 								modifier = Modifier.height(listHeight)) {
-								items(list, key = { item -> item.id }) {
+								items(list, key = { it.id }) {
 									Row {
 										Text(text = it.title, modifier = Modifier.weight(0.4f, true),
 											style = MaterialTheme.typography.titleLarge)
